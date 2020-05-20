@@ -31,7 +31,7 @@ class Linear(layers.Layer):
         self.mask = tf.constant(np.random.randint(2, size=(input_dim, units)).astype("float32"))
     
     def set_mask(self,mask):
-        self.mask = tf.constant(mask.astype("float32"))
+        self.mask = tf.constant(tf.cast(mask, "float32"))
     
     def get_mask(self):
         return self.mask
@@ -72,6 +72,7 @@ class Linear_Mask(layers.Layer):
         self.units = units
         self.input_dim = input_dim
         
+        self.shape = (input_dim, units)
         #if mask:
         #    if mask_matrix == None:
         #        #select random mask
@@ -87,6 +88,12 @@ class Linear_Mask(layers.Layer):
         
         #self.mask = tf.Variable(initial_value=init_mask(shape=(input_dim, units), dtype="float32"), trainable=True)
         self.mask = tf.Variable(initial_value=init_mask(shape=(input_dim, units), dtype="float32"), trainable=True)
+        self.threshold = 0.5 #tf.Variable(initial_value = 0.5, dtype=tf.float32, trainable=True)
+        
+        self.bernoulli_mask = self.mask
+        
+        self.multiplier = 1.
+        self.no_ones = 0.
         
         #self.sigmoid01 = lambda x: 1 if tf.math.sigmoid(x) >= 0.5 else 0
         
@@ -99,10 +106,13 @@ class Linear_Mask(layers.Layer):
         self.mask = tf.constant(np.random.randint(2, size=(input_dim, units)).astype("float32"))
     
     def get_shape(self):
-        return (self.input_dim, self.units)
+        return self.shape
     
     def set_mask(self,mask):
-        self.mask = tf.Variable(mask.astype("float32"))
+        self.mask = tf.Variable(tf.cast(mask, "float32"))
+        
+        self.sigmoid_mask()
+        #self.mask = tf.Variable(mask.astype("float32"))
     
     def get_mask(self, as_logit=False):
         if as_logit is True:
@@ -110,20 +120,31 @@ class Linear_Mask(layers.Layer):
         else:
             return tf.math.sigmoid(self.mask)
         
-    def bernoulli_mask(self, mask=None):
+    def update_bernoulli_mask(self, mask=None):
+        no_samples = 1
+        accept_as_one_th = 1
+        relaxation = tf.cast(no_samples - no_samples*accept_as_one_th, tf.int32)
+        #return tf.cast(tfp.distributions.RelaxedBernoulli(temperature=0.001, probs=tf.math.sigmoid(self.mask)).sample(), dtype=tf.float32)
+        sig_mask = tf.math.sigmoid(self.mask)
+        bernoulli_samples = tfp.distributions.Bernoulli(probs=sig_mask).sample(no_samples)
+        bernoulli_sample_mask = tf.math.floordiv(tf.math.add(tf.math.reduce_sum(bernoulli_samples,axis=0), relaxation), no_samples)  #(tf.math.reduce_sum(a, axis=0)+30) // 100
+        self.bernoulli_mask = tf.cast(bernoulli_sample_mask, dtype=tf.float32) + sig_mask - tf.stop_gradient(sig_mask)
+        return self.bernoulli_mask
         #bernoulli_mask_lambda_fn = lambda x: tf.cast(tfp.distributions.Bernoulli(probs=x).sample(sample_shape=x.shape), "float32")
         #bernoulli_mask = tf.map_fn(bernoulli_mask_lambda_fn, self.mask)
         #print(bernoulli_mask.numpy().shape)
-        bernoulli_mask = tf.cast(tfp.distributions.Bernoulli(probs=tf.math.sigmoid(self.mask)).sample(sample_shape=1), "float32")
-        return tf.reshape(bernoulli_mask, self.mask.shape)
+        #bernoulli_mask = tf.cast(tfp.distributions.Bernoulli(probs=tf.math.sigmoid(self.mask)).sample(sample_shape=1), "float32")
+        #return tf.reshape(bernoulli_mask, self.mask.shape)
     
     def sigmoid_mask(self):
-        sig_mask = tf.math.sigmoid(self.mask)
-        sig_mask = tf.where(sig_mask >= 0.5, 1, sig_mask)
-        sig_mask = tf.where(sig_mask < 0.5, 0, sig_mask)
+        sigmoid_mask = tf.math.sigmoid(self.mask)
+        effective_mask = tf.where(sigmoid_mask >= self.threshold, 1, sigmoid_mask)
+        effective_mask = tf.where(effective_mask < self.threshold, 0, effective_mask)
+        
+        self.bernoulli_mask = effective_mask
         #sig_mask[sig_mask >= 0.5] = 1.
         #sig_mask[sig_mask < 0.5] = 0.
-        return sig_mask
+        return effective_mask + sigmoid_mask - tf.stop_gradient(sigmoid_mask) # + tf.nn.relu(self.mask) - tf.stop_gradient(tf.nn.relu(self.mask))
     
     def get_normal_weights(self):
         return self.w
@@ -141,23 +162,37 @@ class Linear_Mask(layers.Layer):
         return self.b
         
     def get_pruned_weights(self):
-        flipped_mask = tf.cast(tf.not_equal(self.sig_mask, 1), tf.float32)
+        flipped_mask = tf.cast(tf.not_equal(self.bernoulli_mask, 1), tf.float32)
         return tf.multiply(self.w, flipped_mask)
     
     def get_masked_weights(self):
-        return tf.multiply(self.w, self.sig_mask)
+        return tf.multiply(self.w, self.bernoulli_mask)
     
     def get_nonzero_weights(self):
         #weights_masked = tf.multiply(self.w, self.mask)
-        weights_masked = tf.boolean_mask(self.w, self.sig_mask) #tf.not_equal(weights_masked, 0)
+        weights_masked = tf.boolean_mask(self.w, self.bernoulli_mask) #tf.not_equal(weights_masked, 0)
         return weights_masked #[mask]
 
     def call(self, inputs):
         inputs = tf.cast(inputs, tf.float32)
+        #if self.dynamic_scaling:
+        
+        sig_mask = self.sigmoid_mask()
+        
+        weights_masked = tf.multiply(self.w, sig_mask)
+        
+        
+        self.no_ones = tf.reduce_sum(sig_mask)
+        self.multiplier = tf.math.divide(tf.size(sig_mask, out_type=tf.float32), self.no_ones)
+        
+        #print(f"1-masked weights multiplied by: {multiplier:.4f}")
+        
+        weights_masked = tf.multiply(self.multiplier, weights_masked)
         #mask_fn = lambda x: 1 if tf.math.sigmoid(x) >= 0.5 else 0
         #mask = tf.map_fn(lambda x: mask_fn(x), self.mask, back_prop=True)
-        w_mask = tf.multiply(self.w, self.sigmoid_mask())
-        return tf.matmul(inputs, w_mask) #+ self.b
+        #w_mask = tf.multiply(self.w, self.sigmoid_mask())
+        #w_mask = tf.multiply(self.w, tf.math.round(self.sigmoid_mask()))
+        return tf.matmul(inputs, weights_masked) #+ self.b
     
     
 class FCN(tf.keras.Model):

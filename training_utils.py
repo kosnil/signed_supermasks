@@ -54,8 +54,24 @@ class initializer:
             return np.ones(shape)
         if dist == "constant":
             return np.ones(shape) * constant
+        if dist == "signed_constant":
+            if sigma == -1:
+                sigma = 2.0 / sum(shape)
+                norm_glorot = mu + sigma*np.random.randn(*shape)
 
-    def set_weights_man(self, model, layers=None, mode="normal", mu=0, sigma=0.05, constant=1,
+                norm_glorot[norm_glorot > 0] = sigma
+                norm_glorot[norm_glorot < 0] = -sigma
+
+                return norm_glorot
+            else:
+                norm = mu + sigma*np.random.randn(*shape)
+                norm[norm > 0] = sigma
+                norm[norm < 0] = -sigma
+
+                return norm
+
+
+    def set_weights_man(self, model, layers=None, mode="normal", mu=0, sigma=0.05, constant=1, set_mask=False,
                         mu_bi=[0,0], sigma_bi=[0,0], save_to="", weight_as_constant=False):
         i = 0
         len_model = len(model.layers)
@@ -66,9 +82,13 @@ class initializer:
                 for l in model.layers:
                     W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma,
                                                 mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
-                    b = self.initialize_weights("zeros", [l.units])
-                    initial_weights.append([W,b])
-                    l.set_weights([W,b])
+                    if set_mask is False:
+                        b = self.initialize_weights("zeros", [l.units])
+                        initial_weights.append([W,b])
+                        l.set_weights([W,b])
+                    else:
+                        initial_weights.append([W])
+                        l.set_weights([W])
             else:
                 for l in model.layers:
                     W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma,
@@ -98,6 +118,9 @@ class initializer:
 class iterative_pruning:
     
     def __init__(self, initial_weights, loss_fn, optimizer):
+
+        self.initializer = initializer()
+
         self.weights_history = []
         self.weights_masked_history = []
         self.weights_nonzero_history = []
@@ -108,7 +131,9 @@ class iterative_pruning:
         self.bias_history = []
 
         self.mask_history = []
-        
+
+        self.loss_history = []
+
         self.initial_weights = initial_weights
         self.weights_history.append([[w[0] for w in self.initial_weights]])
         
@@ -177,6 +202,15 @@ class iterative_pruning:
             b = self.initial_weights[i][1]
 
             l.set_weights([w,b])
+
+    def reset_weights_new_init(self, model):
+        MU=0
+        MU_BI = [-0.13, 0.13]
+        SIGMA=-1 #0.1 IF SIGMA == -1 --> glorot normal
+        SIGMA_BI = [-SIGMA, SIGMA]
+        model, initial_weights = self.initializer.set_weights_man(model, mode="normal", mu=MU, sigma=SIGMA, mu_bi=MU_BI, sigma_bi=SIGMA_BI, save_to="", weight_as_constant=False)
+        #self.initial_weights.append(initial_weights) 
+        return model
 
     def reset_masks(self, model):
         for layer in model.layers:
@@ -573,16 +607,20 @@ class iterative_pruning:
                 
                     if mask_1_action == "re_init":
                         self.reset_weights_init(model)
+                    elif mask_1_action == "new_init":
+                        self.reset_weights_new_init(model)
                     elif mask_1_action == "re_shuffle":
                         continue
                     elif mask_1_action == "constant":
                         self.reset_weights_constant(model, constant=mask_1_action_constant)
 
-                model, iter_weights, iter_weights_masked, iter_weights_nonzero, iter_weights_pruned, iter_bias = self.train_model(model, dataset_train, epochs, logging)
+                model, iter_weights, iter_weights_masked, iter_weights_nonzero, iter_weights_pruned, iter_bias, iter_loss = self.train_model(model, dataset_train, epochs, logging)
 
                 if dataset_test is not None:
                     print("Evaluate before applying a pruning step:") 
                     self.evaluate(model, dataset_test, single_mode=False)
+
+                self.loss_history.append(iter_loss)
                 
                 self.weights_history.append(iter_weights)
                 self.weights_masked_history.append(iter_weights_masked)
@@ -605,6 +643,8 @@ class iterative_pruning:
                 if reset_before is False:
                     if mask_1_action == "re_init":
                         self.reset_weights_init(model)
+                    elif mask_1_action == "new_init":
+                        self.reset_weights_new_init(model)
                     elif mask_1_action == "re_shuffle":
                         continue
                     elif mask_1_action == "constant":
@@ -635,11 +675,13 @@ class iterative_pruning:
                     print(f"--- Iteration {iteration+1}/{iterations} started ---")
                     
                     self.reset_weights_init(smaller_model, new_initial_weights)
-                    smaller_model, iter_weights, iter_weights_masked, iter_weights_nonzero, iter_weights_pruned, iter_bias = self.train_model(smaller_model, dataset_train, epochs, logging)
+                    smaller_model, iter_weights, iter_weights_masked, iter_weights_nonzero, iter_weights_pruned, iter_bias, iter_loss = self.train_model(smaller_model, dataset_train, epochs, logging)
 
                     if dataset_test is not None:
                         print("Evaluate before applying a pruning step:") 
                         self.evaluate(smaller_model, dataset_test, single_mode=False)
+                    
+                    self.loss_history.append(iter_loss)
                     
                     self.weights_history.append(iter_weights)
                     self.weights_masked_history.append(iter_weights_masked)
@@ -701,6 +743,8 @@ class iterative_pruning:
         iter_weights_pruned = []
         iter_weights_nonzero = []
 
+        iter_loss = []
+
         iter_bias = []
         
         iter_weights.append([w[0] for w in self.initial_weights])
@@ -740,6 +784,8 @@ class iterative_pruning:
 
             iter_bias.append([l.get_bias() for l in model.layers])
 
+            iter_loss.append(self.loss_metric.result().numpy())
+
                 
             if logging:
                 print('\tAccuracy = %s --- Loss = %s' % (self.acc_metric.result().numpy(),self.loss_metric.result().numpy()))
@@ -751,7 +797,7 @@ class iterative_pruning:
 
         self.reset_training_metrics()
         
-        return model, iter_weights, iter_weights_masked, iter_weights_nonzero, iter_weights_pruned, iter_bias#, iter_weights_delta
+        return model, iter_weights, iter_weights_masked, iter_weights_nonzero, iter_weights_pruned, iter_bias, iter_loss#, iter_weights_delta
     
     def evaluate(self,model,dataset_test, single_mode=False):
         for x_batch_test, y_batch_test in dataset_test:
