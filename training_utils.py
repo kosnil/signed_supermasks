@@ -41,11 +41,30 @@ class initializer:
             return norm
         
         if dist == "uniform":
-            return np.random.uniform(-0.5,0.5,shape)
+            if sigma < 0:
+                if sigma == -1:
+                    sigma = 2.0 / sum(shape)
+                if sigma == -2:
+                    sigma = 1.0 / shape[0]
+                if sigma == -3:
+                    sigma = 1.0 / shape[1]
+                if sigma == -4:
+                    sigma = 2.0 / shape[0]
+                print(f"Glorot uniform with bound {sigma:.4f}")
+                return np.random.uniform(-sigma, sigma, shape)
+            else:
+                return np.random.uniform(-mu,mu,shape)
 
         if dist == "normal":
-            if sigma == -1:
-                sigma = 2.0 / sum(shape)
+            if sigma < 0:
+                if sigma == -1:
+                    sigma = 2.0 / sum(shape)
+                if sigma == -2:
+                    sigma = 1.0 / shape[0]
+                if sigma == -3:
+                    sigma = 1.0 / shape[1]
+                if sigma == -4:
+                    sigma = 2.0 / shape[0]
                 print(f"Glorot normal with sigma {sigma:.4f}")
             return mu + sigma*np.random.randn(*shape)
         if dist == "zeros":
@@ -59,8 +78,14 @@ class initializer:
                 sigma = 2.0 / sum(shape)
                 norm_glorot = mu + sigma*np.random.randn(*shape)
 
-                norm_glorot[norm_glorot > 0] = sigma
-                norm_glorot[norm_glorot < 0] = -sigma
+                norm_glorot_pos = norm_glorot[np.where(norm_glorot > 0)]
+                norm_glorot_neg = norm_glorot[np.where(norm_glorot < 0)]
+
+
+                norm_glorot[norm_glorot > 0] = np.mean(norm_glorot_pos)
+                norm_glorot[norm_glorot < 0] = np.mean(norm_glorot_neg)
+
+                print(f"Signed constant: {np.mean(norm_glorot_pos)}")
 
                 return norm_glorot
             else:

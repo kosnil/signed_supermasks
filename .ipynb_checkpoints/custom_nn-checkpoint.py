@@ -90,6 +90,9 @@ class Linear_Mask(layers.Layer):
         self.mask = tf.Variable(initial_value=init_mask(shape=(input_dim, units), dtype="float32"), trainable=True)
         self.threshold = 0.5 #tf.Variable(initial_value = 0.5, dtype=tf.float32, trainable=True)
         
+        #self.multiplier_factor = tf.Variable(initial_value = [1.], trainable=True)
+        
+        
         self.bernoulli_mask = self.mask
         
         self.multiplier = 1.
@@ -136,15 +139,53 @@ class Linear_Mask(layers.Layer):
         #bernoulli_mask = tf.cast(tfp.distributions.Bernoulli(probs=tf.math.sigmoid(self.mask)).sample(sample_shape=1), "float32")
         #return tf.reshape(bernoulli_mask, self.mask.shape)
     
-    def sigmoid_mask(self):
-        sigmoid_mask = tf.math.sigmoid(self.mask)
+    def grothe_idea(self):
+        sig_mask = tf.math.sigmoid(self.mask)
+        
+        self.bernoulli_mask = tf.cast(tfp.distributions.Bernoulli(probs=sig_mask).sample() , dtype=tf.float32)
+        
+        return self.bernoulli_mask + sig_mask - tf.stop_gradient(sig_mask)
+    
+    def sigmoid_mask(self, epoch):
+        sigmoid_mask = tf.math.sigmoid(tf.multiply(self.mask, 0.2))
         effective_mask = tf.where(sigmoid_mask >= self.threshold, 1, sigmoid_mask)
         effective_mask = tf.where(effective_mask < self.threshold, 0, effective_mask)
         
         self.bernoulli_mask = effective_mask
+        
+        #if epoch > 20: # and epoch % 20 == 0:
+        #    effective_mask_flipped = tf.math.abs(effective_mask-1)
+        #    #return tf.stop_gradient(mask_h * target) + mask * target
+
+        #    leftover_sigmoid_mask = tf.stop_gradient(effective_mask_flipped * sigmoid_mask) + effective_mask*sigmoid_mask
+        #else:
+        #    leftover_sigmoid_mask = sigmoid_mask
+        
         #sig_mask[sig_mask >= 0.5] = 1.
         #sig_mask[sig_mask < 0.5] = 0.
         return effective_mask + sigmoid_mask - tf.stop_gradient(sigmoid_mask) # + tf.nn.relu(self.mask) - tf.stop_gradient(tf.nn.relu(self.mask))
+    
+    def tanh_mask(self):
+        
+        tanh_mask = tf.math.tanh(tf.multiply(self.mask, 1.))
+        
+        effective_mask = tf.where(tanh_mask >= 0, 1, tanh_mask)
+        effective_mask = tf.where(effective_mask < 0, 0, effective_mask)
+        
+        self.bernoulli_mask = effective_mask
+        
+        return effective_mask + tanh_mask - tf.stop_gradient(tanh_mask)
+    
+    def relu_mask(self):
+        
+        relu_mask = tf.nn.relu(tf.multiply(self.mask, 1.))
+        
+        effective_mask = tf.where(relu_mask > 0, 1, relu_mask)
+        effective_mask = tf.where(effective_mask <= 0, 0, effective_mask)
+        
+        self.bernoulli_mask = effective_mask
+        
+        return effective_mask + relu_mask - tf.stop_gradient(relu_mask)
     
     def get_normal_weights(self):
         return self.w
@@ -173,27 +214,50 @@ class Linear_Mask(layers.Layer):
         weights_masked = tf.boolean_mask(self.w, self.bernoulli_mask) #tf.not_equal(weights_masked, 0)
         return weights_masked #[mask]
 
-    def call(self, inputs):
+    def call(self, inputs, epoch):
         inputs = tf.cast(inputs, tf.float32)
-        #if self.dynamic_scaling:
         
-        sig_mask = self.sigmoid_mask()
-        
+        sig_mask = self.sigmoid_mask(epoch)
         weights_masked = tf.multiply(self.w, sig_mask)
         
-        
         self.no_ones = tf.reduce_sum(sig_mask)
-        self.multiplier = tf.math.divide(tf.size(sig_mask, out_type=tf.float32), self.no_ones)
-        
-        #print(f"1-masked weights multiplied by: {multiplier:.4f}")
+        self.multiplier = 1.5 * tf.math.divide(tf.size(sig_mask, out_type=tf.float32), self.no_ones)
         
         weights_masked = tf.multiply(self.multiplier, weights_masked)
-        #mask_fn = lambda x: 1 if tf.math.sigmoid(x) >= 0.5 else 0
-        #mask = tf.map_fn(lambda x: mask_fn(x), self.mask, back_prop=True)
-        #w_mask = tf.multiply(self.w, self.sigmoid_mask())
-        #w_mask = tf.multiply(self.w, tf.math.round(self.sigmoid_mask()))
         return tf.matmul(inputs, weights_masked) #+ self.b
     
+        #intermediate_results = []
+        
+        #def apply_grothe_mask(inputs):
+        #    grothe_mask = self.grothe_idea()
+        #    weights_masked = tf.multiply(self.w, grothe_mask)
+        #    return tf.matmul(inputs, weights_masked)
+        
+        #repeat=10
+        
+        #grothe = tf.map_fn(apply_grothe_mask, tf.repeat(tf.expand_dims(inputs, axis=0), repeats=repeat, axis=0), parallel_iterations=repeat, dtype=tf.float32, back_prop=True)
+        
+        #grothe_mean = tf.reduce_mean(grothe, axis=0)
+        
+        #return grothe_mean
+        
+        
+        #for i in range(100):
+        #    grothe_mask = self.grothe_idea()
+        #    weights_masked = tf.multiply(self.w, grothe_mask)
+            
+        #    intermediate_results.append(tf.matmul(inputs, weights_masked).numpy())
+        
+        #print(f"Shape of intermediate_results: {np.array(intermediate_results).shape}")
+        
+        #tf_intermediate_results = tf.reduce_mean(tf.convert_to_tensor(intermediate_results, dtype=tf.float32), axis=0)
+        
+        
+        #return tf_intermediate_results
+        
+        
+        
+        
     
 class FCN(tf.keras.Model):
     
@@ -203,15 +267,32 @@ class FCN(tf.keras.Model):
         self.linear_in = Linear(*layer_shapes[0])
         self.linear_h1 = Linear(*layer_shapes[1])
         self.linear_out = Linear(*layer_shapes[2])
+        
+        
     
     def call(self, inputs):
         
+        
+        layerwise_output = []
+        layerwise_output.append(tf.reduce_mean(inputs, axis=0))
+        
         x = self.linear_in(inputs)
         x = tf.nn.relu(x)
+        layerwise_output.append(tf.reduce_mean(x, axis=0))
         x = self.linear_h1(x)
         x = tf.nn.relu(x) 
+        layerwise_output.append(tf.reduce_mean(x, axis=0))
         x = self.linear_out(x)
-        return tf.nn.softmax(x)
+        x = tf.nn.softmax(x)
+        layerwise_output.append(tf.reduce_mean(x, axis=0))
+        return x, layerwise_output
+        
+        #x = self.linear_in(inputs)
+        #x = tf.nn.relu(x)
+        #x = self.linear_h1(x)
+        #x = tf.nn.relu(x) 
+        #x = self.linear_out(x)
+        #return tf.nn.softmax(x)
     
 class FCN_Mask(tf.keras.Model):
     
@@ -222,14 +303,46 @@ class FCN_Mask(tf.keras.Model):
         self.linear_h1 = Linear_Mask(*layer_shapes[1])
         self.linear_out = Linear_Mask(*layer_shapes[2])
     
-    def call(self, inputs):
+        self.all_layers = [self.linear_in, self.linear_h1, self.linear_out]
+    
+    def get_neuron_outputs(self,inputs):
         
-        x = self.linear_in(inputs)
+        result = []
+        result.append(inputs)
+        
+        x_in = self.linear_in(inputs)
+        x_in = tf.nn.relu(x_in)
+        result.append(tf.reduce_mean(x_in, axis=0))
+        x_hidden = self.linear_h1(x_in)
+        x_hidden = tf.nn.relu(x_hidden)
+        result.append(tf.reduce_mean(x_hidden, axis=0))
+        x_out = self.linear_out(x_hidden)
+        x_out = self.nn.softmax(x_out)
+        result.append(tf.reduce_mean(x_out, axis=0))
+        
+        return result
+        
+#        for i in range(len(self.all_layers)):
+#            important_layers = self.all_layers[:i+1]
+            
+#            for il in important_layers:
+#                x = 
+    
+    def call(self, inputs, epoch=0):
+        
+        layerwise_output = []
+        layerwise_output.append(tf.reduce_mean(inputs, axis=0))
+        
+        x = self.linear_in(inputs, epoch)
         x = tf.nn.relu(x)
-        x = self.linear_h1(x)
+        layerwise_output.append(tf.reduce_mean(x, axis=0))
+        x = self.linear_h1(x, epoch)
         x = tf.nn.relu(x) 
-        x = self.linear_out(x)
-        return tf.nn.softmax(x)
+        layerwise_output.append(tf.reduce_mean(x, axis=0))
+        x = self.linear_out(x, epoch)
+        x = tf.nn.softmax(x)
+        layerwise_output.append(tf.reduce_mean(x, axis=0))
+        return x, layerwise_output
     
 class AE(tf.keras.Model):
     
