@@ -9,6 +9,10 @@ class initializer:
     
     def __init__(self):
         print("initializer")
+
+        self.seed = 7531
+        np.random.seed(self.seed)
+        tf.random.set_seed(self.seed)
         
     def initialize_weights(self, dist, shape, mu=0, sigma=1, mu_bi=[0,0], sigma_bi=[0,0], constant=1):
         if dist == "std_normal":
@@ -50,6 +54,13 @@ class initializer:
                     sigma = 1.0 / shape[1]
                 if sigma == -4:
                     sigma = 2.0 / shape[0]
+                if sigma == -5:
+                    sigma = 2.0 / shape[1]
+                if sigma == -6:
+                    sigma = 3.0 / shape[1]
+                if sigma == -7:
+                    sigma = np.sqrt(3) / np.sqrt(shape[0:])
+                #print("sigma: ", sigma)
                 print(f"Glorot uniform with bound {sigma:.4f}")
                 return np.random.uniform(-sigma, sigma, shape)
             else:
@@ -65,6 +76,9 @@ class initializer:
                     sigma = 1.0 / shape[1]
                 if sigma == -4:
                     sigma = 2.0 / shape[0]
+                if sigma == -5:
+                    sigma = 2.0 / shape[1]
+                
                 print(f"Glorot normal with sigma {sigma:.4f}")
             return mu + sigma*np.random.randn(*shape)
         if dist == "zeros":
@@ -76,22 +90,37 @@ class initializer:
         if dist == "signed_constant":
             if sigma == -1:
                 sigma = 2.0 / sum(shape)
+            if sigma == -2:
+                sigma = 1.0 / shape[0]
+            if sigma == -3:
+                sigma = 1.0 / shape[1]
+            if sigma == -4:
+                sigma = 2.0 / shape[0]
+            if sigma == -5:
+                sigma = 2.0 / shape[1]
+            if sigma == -6:
+                sigma = 3.0 / shape[1]
+            
+            if constant == -1:
                 norm_glorot = mu + sigma*np.random.randn(*shape)
 
                 norm_glorot_pos = norm_glorot[np.where(norm_glorot > 0)]
                 norm_glorot_neg = norm_glorot[np.where(norm_glorot < 0)]
 
 
-                norm_glorot[norm_glorot > 0] = np.mean(norm_glorot_pos)
-                norm_glorot[norm_glorot < 0] = np.mean(norm_glorot_neg)
+                norm_glorot[norm_glorot >= mu] = np.mean(norm_glorot_pos)
+                norm_glorot[norm_glorot < mu] = np.mean(norm_glorot_neg)
 
-                print(f"Signed constant: {np.mean(norm_glorot_pos)}")
+                print(f"Signed constant (mean): {np.mean(norm_glorot_pos)}")
 
                 return norm_glorot
-            else:
+
+            elif constant == -2:
                 norm = mu + sigma*np.random.randn(*shape)
-                norm[norm > 0] = sigma
-                norm[norm < 0] = -sigma
+                norm[norm >= mu] = sigma
+                norm[norm < mu] = -sigma
+
+                print(f"Signed constant (std): {sigma}")
 
                 return norm
 
@@ -99,27 +128,50 @@ class initializer:
     def set_weights_man(self, model, layers=None, mode="normal", mu=0, sigma=0.05, constant=1, set_mask=False,
                         mu_bi=[0,0], sigma_bi=[0,0], save_to="", weight_as_constant=False):
         i = 0
-        len_model = len(model.layers)
+        #len_model = len(model.layers)
         initial_weights = []
 
         if layers == None:
             if weight_as_constant == False:
                 for l in model.layers:
-                    W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma,
-                                                mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
-                    if set_mask is False:
-                        b = self.initialize_weights("zeros", [l.units])
-                        initial_weights.append([W,b])
-                        l.set_weights([W,b])
+                    if l.type == "fefo":
+                        W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma,
+                                                    mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
+                        if set_mask is False:
+                            b = self.initialize_weights("zeros", [l.units])
+                            initial_weights.append([W,b])
+                            l.set_weights([W,b])
+                        else:
+                            initial_weights.append([W])
+                            l.set_mask(W)
+                            # l.set_weights([W])
+                    elif l.type == "conv":
+                        W = self.initialize_weights(mode, list(l.weight_shape), mu=mu, sigma=sigma,
+                                                    mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
+                        if set_mask is False:
+                            b = self.initialize_weights("zeros", [1,l.filters])
+                            initial_weights.append([W,b])
+                            l.set_weights([W,b])
+                        else:
+                            initial_weights.append([W])
+                            l.set_mask(W)
+
                     else:
-                        initial_weights.append([W])
-                        l.set_weights([W])
+                        continue
             else:
                 for l in model.layers:
-                    W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma,
-                                                mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
-                    initial_weights.append(W)
-                    l.set_normal_weights(W)
+                    if l.type == "fefo":
+                        W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma,
+                                                    mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
+                        initial_weights.append(W)
+                        l.set_normal_weights(W)
+                    elif l.type == "conv":
+                        W = self.initialize_weights(mode, list(l.weight_shape), mu=mu, sigma=sigma,
+                                                    mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
+                        initial_weights.append(W)
+                        l.set_normal_weights(W)
+                    else:
+                        continue
         else:
             for i,l in enumerate(model.layers):
                 if i in layers:
