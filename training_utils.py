@@ -100,6 +100,8 @@ class initializer:
                 sigma = 2.0 / shape[1]
             if sigma == -6:
                 sigma = 3.0 / shape[1]
+            if sigma == -7:
+                sigma = np.sqrt(3) / np.sqrt(shape[0:])
             
             if constant == -1:
                 norm_glorot = mu + sigma*np.random.randn(*shape)
@@ -138,7 +140,7 @@ class initializer:
                         W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma,
                                                     mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
                         if set_mask is False:
-                            b = self.initialize_weights("zeros", [l.units])
+                            b = self.initialize_weights("ones", [l.units])
                             initial_weights.append([W,b])
                             l.set_weights([W,b])
                         else:
@@ -149,7 +151,7 @@ class initializer:
                         W = self.initialize_weights(mode, list(l.weight_shape), mu=mu, sigma=sigma,
                                                     mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
                         if set_mask is False:
-                            b = self.initialize_weights("zeros", [1,l.filters])
+                            b = self.initialize_weights("ones", [1,l.filters])
                             initial_weights.append([W,b])
                             l.set_weights([W,b])
                         else:
