@@ -2,3 +2,5 @@
 **/img
 **/_pycache_
 **/.ipynb_checkpoints
+**/.vscode
+**/__pycache__
