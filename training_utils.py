@@ -14,7 +14,15 @@ class initializer:
         np.random.seed(self.seed)
         tf.random.set_seed(self.seed)
         
-    def initialize_weights(self, dist, shape, mu=0, sigma=1, mu_bi=[0,0], sigma_bi=[0,0], constant=1):
+    def get_fans(self, shape):
+        fan_in = float(shape[-2]) if len(shape) > 1 else float(shape[-1])
+        fan_out = float(shape[-1])
+        for dim in shape[:-2]:
+            fan_in *= float(dim)
+            fan_out *= float(dim)
+        return fan_in, fan_out
+        
+    def initialize_weights(self, dist, shape, mu=0, sigma=1, factor=1., mu_bi=[0,0], sigma_bi=[0,0], constant=1):
         if dist == "std_normal":
             return np.random.randn(*shape)
         if dist == "bimodal_normal":
@@ -46,20 +54,31 @@ class initializer:
         
         if dist == "uniform":
             if sigma < 0:
+                
+                fan_in, fan_out = self.get_fans(shape)
+                
+                # xavier variance as bound
                 if sigma == -1:
-                    sigma = 2.0 / sum(shape)
+                    sigma = 2.0 / (fan_in + fan_out)
                 if sigma == -2:
-                    sigma = 1.0 / shape[0]
+                    sigma = 1.0 / fan_in
                 if sigma == -3:
-                    sigma = 1.0 / shape[1]
+                    sigma = 1.0 / fan_out
+                # kaiming as bound
                 if sigma == -4:
-                    sigma = 2.0 / shape[0]
+                    sigma = 2.0 / fan_in
                 if sigma == -5:
-                    sigma = 2.0 / shape[1]
+                    sigma = 2.0 / fan_out
                 if sigma == -6:
-                    sigma = 3.0 / shape[1]
-                if sigma == -7:
-                    sigma = np.sqrt(3) / np.sqrt(shape[0:])
+                    sigma = 3.0 / fan_out
+                # correct xavier
+                if sigma == -7: 
+                    sigma = np.sqrt(3) / np.sqrt(fan_in + fan_out)
+                # correct kaiming
+                if sigma == -8:
+                    sigma = np.sqrt(6) / np.sqrt(fan_in)
+                
+                sigma *= factor
                 #print("sigma: ", sigma)
                 print(f"Glorot uniform with bound {sigma:.4f}")
                 return np.random.uniform(-sigma, sigma, shape)
@@ -68,41 +87,67 @@ class initializer:
 
         if dist == "normal":
             if sigma < 0:
-                if sigma == -1:
-                    sigma = 2.0 / sum(shape)
-                if sigma == -2:
-                    sigma = 1.0 / shape[0]
-                if sigma == -3:
-                    sigma = 1.0 / shape[1]
-                if sigma == -4:
-                    sigma = 2.0 / shape[0]
-                if sigma == -5:
-                    sigma = 2.0 / shape[1]
+
+                fan_in, fan_out = self.get_fans(shape)
                 
+                # xavier variance as bound
+                if sigma == -1:
+                    sigma = 2.0 / (fan_in + fan_out)
+                if sigma == -2:
+                    sigma = 1.0 / fan_in
+                if sigma == -3:
+                    sigma = 1.0 / fan_out
+                # kaiming as bound
+                if sigma == -4:
+                    sigma = 2.0 / fan_in
+                if sigma == -5:
+                    sigma = 2.0 / fan_out
+                if sigma == -6:
+                    sigma = 3.0 / fan_out
+                # correct xavier
+                if sigma == -7: 
+                    sigma = np.sqrt(3) / np.sqrt(fan_in + fan_out)
+                # correct kaiming
+                if sigma == -8:
+                    sigma = np.sqrt(6) / np.sqrt(fan_in)
+
+                sigma *= factor
                 print(f"Glorot normal with sigma {sigma:.4f}")
             return mu + sigma*np.random.randn(*shape)
         if dist == "zeros":
             return np.zeros(shape)
         if dist == "ones":
+            print("Ones")
             return np.ones(shape)
         if dist == "constant":
             return np.ones(shape) * constant
         if dist == "signed_constant":
-            if sigma == -1:
-                sigma = 2.0 / sum(shape)
-            if sigma == -2:
-                sigma = 1.0 / shape[0]
-            if sigma == -3:
-                sigma = 1.0 / shape[1]
-            if sigma == -4:
-                sigma = 2.0 / shape[0]
-            if sigma == -5:
-                sigma = 2.0 / shape[1]
-            if sigma == -6:
-                sigma = 3.0 / shape[1]
-            if sigma == -7:
-                sigma = np.sqrt(3) / np.sqrt(shape[0:])
             
+            fan_in, fan_out = self.get_fans(shape)
+            
+            # xavier variance as bound
+            if sigma == -1:
+                sigma = 2.0 / (fan_in + fan_out)
+            elif sigma == -2:
+                sigma = 1.0 / fan_in
+            elif sigma == -3:
+                sigma = 1.0 / fan_out
+            # kaiming as bound
+            elif sigma == -4:
+                sigma = 2.0 / fan_in
+            elif sigma == -5:
+                sigma = 2.0 / fan_out
+            elif sigma == -6:
+                sigma = 3.0 / fan_out
+            # correct xavier
+            elif sigma == -7: 
+                sigma = np.sqrt(3) / np.sqrt(fan_in + fan_out)
+            # correct kaiming
+            elif sigma == -8:
+                sigma = np.sqrt(6) / np.sqrt(fan_in)
+            
+            sigma *= factor
+
             if constant == -1:
                 norm_glorot = mu + sigma*np.random.randn(*shape)
 
@@ -115,6 +160,7 @@ class initializer:
 
                 print(f"Signed constant (mean): {np.mean(norm_glorot_pos)}")
 
+
                 return norm_glorot
 
             elif constant == -2:
@@ -124,10 +170,11 @@ class initializer:
 
                 print(f"Signed constant (std): {sigma}")
 
+                
                 return norm
 
 
-    def set_weights_man(self, model, layers=None, mode="normal", mu=0, sigma=0.05, constant=1, set_mask=False,
+    def set_weights_man(self, model, layers=None, mode="normal", mu=0, sigma=0.05, factor=1., constant=1, set_mask=False,
                         mu_bi=[0,0], sigma_bi=[0,0], save_to="", weight_as_constant=False):
         i = 0
         #len_model = len(model.layers)
@@ -136,8 +183,9 @@ class initializer:
         if layers == None:
             if weight_as_constant == False:
                 for l in model.layers:
+                    # print("l type: ", l.type)
                     if l.type == "fefo":
-                        W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma,
+                        W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma, factor=factor,
                                                     mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
                         if set_mask is False:
                             b = self.initialize_weights("ones", [l.units])
@@ -148,7 +196,7 @@ class initializer:
                             l.set_mask(W)
                             # l.set_weights([W])
                     elif l.type == "conv":
-                        W = self.initialize_weights(mode, list(l.weight_shape), mu=mu, sigma=sigma,
+                        W = self.initialize_weights(mode, list(l.weight_shape), mu=mu, sigma=sigma, factor=factor,
                                                     mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
                         if set_mask is False:
                             b = self.initialize_weights("ones", [1,l.filters])
@@ -163,12 +211,12 @@ class initializer:
             else:
                 for l in model.layers:
                     if l.type == "fefo":
-                        W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma,
+                        W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma, factor=factor,
                                                     mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
                         initial_weights.append(W)
                         l.set_normal_weights(W)
                     elif l.type == "conv":
-                        W = self.initialize_weights(mode, list(l.weight_shape), mu=mu, sigma=sigma,
+                        W = self.initialize_weights(mode, list(l.weight_shape), mu=mu, sigma=sigma, factor=factor, 
                                                     mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
                         initial_weights.append(W)
                         l.set_normal_weights(W)
@@ -177,7 +225,7 @@ class initializer:
         else:
             for i,l in enumerate(model.layers):
                 if i in layers:
-                    W = self.initialize_weights(mode, [l.input_dim, l.units],mu=mu, sigma=sigma,
+                    W = self.initialize_weights(mode, [l.input_dim, l.units],mu=mu, sigma=sigma, factor=factor,
                                                 mu_bi=mu_bi, mu_sigma=sigma_bi, constant=constant)
                     b = self.initialize_weights("zeros", [l.units])
                     initial_weights.append([W,b])
