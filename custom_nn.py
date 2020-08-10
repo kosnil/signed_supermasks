@@ -86,7 +86,13 @@ class Linear(layers.Layer):
         inputs = tf.cast(inputs, tf.float32)
         w_mask = tf.multiply(self.w, self.mask)
         return tf.matmul(inputs, w_mask) + self.b
-    
+
+@tf.custom_gradient
+def custom_call_test(inputs):
+    def grad(dy, variables=None):
+        print("dy shape: ", dy.shape)
+        return dy*0., variables
+    return inputs, grad
 
 class Dense_Mask(layers.Layer):
     
@@ -290,7 +296,7 @@ class Dense_Mask(layers.Layer):
 
         # return effective_mask + sigmoid_mask - tf.stop_gradient(sigmoid_mask)
         # return tf.stop_gradient(effective_mask) #+ sigmoid_mask - tf.stop_gradient(sigmoid_mask)
-        return tf.stop_gradient(effective_mask)# + tf.identity(effective_mask) - tf.stop_gradient(tf.identity(effective_mask))   #+ sigmoid_mask - tf.stop_gradient(sigmoid_mask)
+        return tf.stop_gradient(effective_mask) + self.mask - tf.stop_gradient(self.mask)# + tf.identity(effective_mask) - tf.stop_gradient(tf.identity(effective_mask))   #+ sigmoid_mask - tf.stop_gradient(sigmoid_mask)
     
     def get_normal_weights(self):
         return self.w
@@ -332,15 +338,15 @@ class Dense_Mask(layers.Layer):
         def grad(dy, variables=None):
             # print("gradient of layer: ", self.name)
             # print("dy shape: ", dy.shape)
-            print("dy: ")
-            print(dy)
-            print("variables: ", len(variables))
-            print(variables)
-            print("dy shape: ", tf.shape(dy))
-            dy = dy * tf.matmul(inputs, self.w)
-            variables_grad = tf.zeros(tf.shape(dy))
-            print("variables grad shape: ", variables_grad.shape)
-            return (dy, [None] ) #.inputs[1]
+            # print("dy: ")
+            # print(dy)
+            # print("variables: ", len(variables))
+            # print(variables)
+            # print("dy shape: ", tf.shape(dy))
+            # dy = dy * tf.matmul(inputs, self.w)
+            # variables_grad = tf.zeros(tf.shape(dy))
+            # print("variables grad shape: ", variables_grad.shape)
+            return dy*0., variables#, [None]  #.inputs[1]
         
         return outputs, grad
 
@@ -350,33 +356,34 @@ class Dense_Mask(layers.Layer):
         
         # print("through layer: ", self.name)
         # return self.custom_call(inputs)
-        
-        if self.use_bernoulli_sampler is True:
-            sig_mask = self.update_bernoulli_mask()
-        else:
-            # sig_mask = self.sigmoid_mask(epoch)
-            sig_mask = self.score_mask()
-        weights_masked = tf.multiply(self.w, sig_mask)
+        return custom_call_test(inputs) 
+        # if self.use_bernoulli_sampler is True:
+        #     sig_mask = self.update_bernoulli_mask()
+        # else:
+        #     # sig_mask = self.sigmoid_mask(epoch)
+        #     sig_mask = self.score_mask()
+        # weights_masked = tf.multiply(self.w, sig_mask)
         
          
-        if self.dynamic_scaling is True:
-            self.no_ones = tf.reduce_sum(sig_mask)
-            self.multiplier =  tf.math.divide(tf.size(sig_mask, out_type=tf.float32), self.no_ones) #* (1./self.sigmoid_multiplier)
-            #print("Multiplier in ", self.name, ": ", self.multiplier) 
-            weights_masked = tf.multiply(self.multiplier, weights_masked)
+        # if self.dynamic_scaling is True:
+        #     self.no_ones = tf.reduce_sum(sig_mask)
+        #     self.multiplier =  tf.math.divide(tf.size(sig_mask, out_type=tf.float32), self.no_ones) #* (1./self.sigmoid_multiplier)
+        #     #print("Multiplier in ", self.name, ": ", self.multiplier) 
+        #     weights_masked = tf.multiply(self.multiplier, weights_masked)
 
-        # print("FF Layer")
-        # print("inputs shape")
-        outputs = tf.matmul(inputs, weights_masked)
+        # # print("FF Layer")
+        # # print("inputs shape")
+        # outputs = tf.matmul(inputs, weights_masked)
 
-        if self.use_bias is True:
-            outputs = tf.nn.bias_add(outputs, self.b)
+        # if self.use_bias is True:
+        #     outputs = tf.nn.bias_add(outputs, self.b)
 
 
-        full_output = tf.matmul(inputs, self.w)
+        # # full_output = tf.matmul(inputs, self.w)
 
-        return tf.divide(tf.multiply(tf.stop_gradient( outputs ),full_output), tf.stop_gradient(full_output))
-        # return tf.stop_gradient( outputs ) + full_output - tf.stop_gradient(full_output)#+ self.b
+        # # return outputs * tf.divide(full_output, tf.stop_gradient(full_output))
+        # # return tf.stop_gradient( outputs ) + full_output - tf.stop_gradient(full_output)#+ self.b
+        # return outputs
     
         #intermediate_results = []
         
@@ -676,7 +683,8 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
             
         full_output = self._convolution_op(inputs, self.w)
         
-        return tf.divide(tf.multiply(tf.stop_gradient( outputs ),full_output), tf.stop_gradient(full_output))
+        # return tf.divide(tf.multiply(tf.stop_gradient( outputs ),full_output), tf.stop_gradient(full_output))
+        return tf.stop_gradient(outputs) + full_output - tf.stop_gradient(full_output)
 
         
         #------------------OLD-------------------------------- 
@@ -737,12 +745,12 @@ class FCN(tf.keras.Model):
     
 class FCN_Mask(tf.keras.Model):
     
-    def __init__(self, input_dim, layer_shapes, no_layers=4, sigmoid_multiplier=[0.2,0.2,0.2], use_bernoulli_sampler=False):
+    def __init__(self, input_dim, layer_shapes, no_layers=4, sigmoid_multiplier=[0.2,0.2,0.2], use_bernoulli_sampler=False, dynamic_scaling=True):
         super(FCN_Mask,self).__init__()
                 
-        self.linear_in = Dense_Mask(*layer_shapes[0], sigmoid_multiplier=sigmoid_multiplier[0], use_bernoulli_sampler = use_bernoulli_sampler)
-        self.linear_h1 = Dense_Mask(*layer_shapes[1], sigmoid_multiplier=sigmoid_multiplier[1], use_bernoulli_sampler = use_bernoulli_sampler)
-        self.linear_out = Dense_Mask(*layer_shapes[2], sigmoid_multiplier=sigmoid_multiplier[2], use_bernoulli_sampler = use_bernoulli_sampler)
+        self.linear_in = Dense_Mask(*layer_shapes[0], sigmoid_multiplier=sigmoid_multiplier[0], use_bernoulli_sampler = use_bernoulli_sampler, dynamic_scaling=dynamic_scaling)
+        self.linear_h1 = Dense_Mask(*layer_shapes[1], sigmoid_multiplier=sigmoid_multiplier[1], use_bernoulli_sampler = use_bernoulli_sampler, dynamic_scaling=dynamic_scaling)
+        self.linear_out = Dense_Mask(*layer_shapes[2], sigmoid_multiplier=sigmoid_multiplier[2], use_bernoulli_sampler = use_bernoulli_sampler, dynamic_scaling=dynamic_scaling)
     
         self.all_layers = [self.linear_in, self.linear_h1, self.linear_out]
     
@@ -778,7 +786,7 @@ class FCN_Mask(tf.keras.Model):
         x = tf.nn.softmax(x)
         layerwise_output.append(tf.reduce_mean(x, axis=0))
         
-        return x, layerwise_output
+        return x #, layerwise_output
     
 class Conv2(tf.keras.Model):
 
