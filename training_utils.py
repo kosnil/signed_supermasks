@@ -7,10 +7,10 @@ from custom_nn import FCN
 
 class initializer:
     
-    def __init__(self):
+    def __init__(self, seed=7531):
         print("initializer")
 
-        self.seed = 7531
+        self.seed = seed
         np.random.seed(self.seed)
         tf.random.set_seed(self.seed)
         
@@ -84,6 +84,11 @@ class initializer:
                 return np.random.uniform(-sigma, sigma, shape)
             else:
                 return np.random.uniform(-mu,mu,shape)
+        
+        if dist == "positive_uniform":
+            uniform = self.initialize_weights(dist="uniform", shape=shape, mu=mu, sigma=sigma, factor=factor, mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
+            print("Only positive values")
+            return np.abs(uniform)
 
         if dist == "normal":
             if sigma < 0:
@@ -99,7 +104,7 @@ class initializer:
                     sigma = 1.0 / fan_out
                 # kaiming as bound
                 if sigma == -4:
-                    sigma = 2.0 / fan_in
+                    sigma = np.sqrt(2.0) / np.sqrt(fan_in)
                 if sigma == -5:
                     sigma = 2.0 / fan_out
                 if sigma == -6:
@@ -120,7 +125,31 @@ class initializer:
             print("Ones")
             return np.ones(shape)
         if dist == "constant":
-            return np.ones(shape) * constant
+
+            fan_in, fan_out = self.get_fans(shape)
+
+            if sigma == -1:
+                sigma = 2.0 / (fan_in + fan_out)
+            elif sigma == -2:
+                sigma = 1.0 / fan_in
+            elif sigma == -3:
+                sigma = 1.0 / fan_out
+            elif sigma == -4:
+                sigma = 2.0 / fan_in
+            elif sigma == -5:
+                sigma = 2.0 / fan_out
+            elif sigma == -6:
+                sigma = 3.0 / fan_out
+            elif sigma == -7:
+                sigma = np.sqrt(3) / np.sqrt(fan_in + fan_out)
+            elif sigma == -8:
+                sigma = np.sqrt(6) / np.sqrt(fan_in)
+
+            sigma *= factor
+            print("Constant with: ", sigma)
+            
+            return np.ones(shape) * sigma
+
         if dist == "signed_constant":
             
             fan_in, fan_out = self.get_fans(shape)
@@ -134,7 +163,7 @@ class initializer:
                 sigma = 1.0 / fan_out
             # kaiming as bound
             elif sigma == -4:
-                sigma = 2.0 / fan_in
+                sigma = np.sqrt(2) / np.sqrt(fan_in)
             elif sigma == -5:
                 sigma = 2.0 / fan_out
             elif sigma == -6:
@@ -147,6 +176,7 @@ class initializer:
                 sigma = np.sqrt(6) / np.sqrt(fan_in)
             
             sigma *= factor
+
 
             if constant == -1:
                 norm_glorot = mu + sigma*np.random.randn(*shape)
@@ -175,13 +205,14 @@ class initializer:
 
 
     def set_weights_man(self, model, layers=None, mode="normal", mu=0, sigma=0.05, factor=1., constant=1, set_mask=False,
-                        mu_bi=[0,0], sigma_bi=[0,0], save_to="", weight_as_constant=False):
+                        mu_bi=[0,0], sigma_bi=[0,0], save_to="", weight_as_constant=False, layer_shapes=None):
         i = 0
         #len_model = len(model.layers)
         initial_weights = []
 
         if layers == None:
             if weight_as_constant == False:
+                layer_shape_counter = 0
                 for l in model.layers:
                     # print("l type: ", l.type)
                     if l.type == "fefo":
@@ -190,7 +221,10 @@ class initializer:
                         if set_mask is False:
                             b = self.initialize_weights("ones", [l.units])
                             initial_weights.append([W,b])
-                            l.set_weights([W,b])
+                            # l.set_weights([W,b])
+                            # l.set_weights([W])
+                            l.set_normal_weights(W)
+                            l.trainable = False
                         else:
                             initial_weights.append([W])
                             l.set_mask(W)
@@ -201,10 +235,25 @@ class initializer:
                         if set_mask is False:
                             b = self.initialize_weights("ones", [1,l.filters])
                             initial_weights.append([W,b])
-                            l.set_weights([W,b])
+                            # l.set_weights([W,b])
+                            # l.set_weights([W])
+                            l.set_normal_weights(W)
+                            l.trainable = False
+
+
                         else:
                             initial_weights.append([W])
                             l.set_mask(W)
+                    elif l.type == "fefo_normal":
+                        W = self.initialize_weights(mode, layer_shapes[layer_shape_counter], mu=mu, sigma=sigma, factor=factor,
+                                                    mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
+                        l.set_weights([W])
+                        layer_shape_counter += 1
+                    elif l.type == "conv_normal":
+                        W = self.initialize_weights(mode, layer_shapes[layer_shape_counter], mu=mu, sigma=sigma, factor=factor,
+                                                    mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
+                        l.set_weights([W])
+                        layer_shape_counter += 1
 
                     else:
                         continue
@@ -223,15 +272,26 @@ class initializer:
                     else:
                         continue
         else:
+            layer_counter = 0
             for i,l in enumerate(model.layers):
-                if i in layers:
-                    W = self.initialize_weights(mode, [l.input_dim, l.units],mu=mu, sigma=sigma, factor=factor,
-                                                mu_bi=mu_bi, mu_sigma=sigma_bi, constant=constant)
-                    b = self.initialize_weights("zeros", [l.units])
-                    initial_weights.append([W,b])
-                    l.set_weights([W,b])
+                if l.type is "fefo" or l.type is "conv":
+                    W = layers[layer_counter]
+                    l.set_weights([W])
+                    layer_counter += 1
+                # elif l.type is "conv":
+                #     W = layer
                 else:
                     continue
+                
+                
+                # if i in layers:
+                #     W = self.initialize_weights(mode, [l.input_dim, l.units],mu=mu, sigma=sigma, factor=factor,
+                #                                 mu_bi=mu_bi,sigma_bi=sigma_bi, constant=constant)
+                #     b = self.initialize_weights("zeros", [l.units])
+                #     initial_weights.append([W,b])
+                #     l.set_weights([W,b])
+                # else:
+                #     continue
 
         if save_to != "":
             with open(save_to+"_"+mode+".pkl", 'wb') as handle:
@@ -418,29 +478,29 @@ class iterative_pruning:
 
         return model
         
-    def mask_globally_magnitude_high(self, model, th=0.5):
-        shape_info = [l.weights[0].shape for l in model.layers]
-        all_weights_flat = np.concatenate([l.get_masked_weights().numpy().flatten() for l in model.layers])
+    # def mask_globally_magnitude_high(self, model, th=0.5):
+    #     shape_info = [l.weights[0].shape for l in model.layers]
+    #     all_weights_flat = np.concatenate([l.get_masked_weights().numpy().flatten() for l in model.layers])
 
-        mask = np.ones(all_weights_flat.shape)
+    #     mask = np.ones(all_weights_flat.shape)
 
-        p_val = self.get_p_smallest_value(all_weights_flat, p=th)
+    #     p_val = self.get_p_smallest_value(all_weights_flat, p=th)
 
-        all_weights_smaller_p = np.where(np.absolute(all_weights_flat) < p_val)[0]
+    #     all_weights_smaller_p = np.where(np.absolute(all_weights_flat) < p_val)[0]
 
-        mask[all_weights_smaller_p] = 0
+    #     mask[all_weights_smaller_p] = 0
     
-        for i,s in enumerate(shape_info):
-            #print(i,s)
-            #print("Mask shape: ", mask.shape)
-            old_mask = model.layers[i].get_mask()
-            layer_mask = mask[:s[0]*s[1]].reshape(s)
-            layer_mask = np.logical_and(old_mask,layer_mask).astype("float32")
-            #print(layer_mask.shape)
-            model.layers[i].set_mask(layer_mask)
-            mask = mask[s[0]*s[1]:]
+    #     for i,s in enumerate(shape_info):
+    #         #print(i,s)
+    #         #print("Mask shape: ", mask.shape)
+    #         old_mask = model.layers[i].get_mask()
+    #         layer_mask = mask[:s[0]*s[1]].reshape(s)
+    #         layer_mask = np.logical_and(old_mask,layer_mask).astype("float32")
+    #         #print(layer_mask.shape)
+    #         model.layers[i].set_mask(layer_mask)
+    #         mask = mask[s[0]*s[1]:]
 
-        return model
+    #     return model
 
 
     def mask_globally_delta_high(self, model, th):
