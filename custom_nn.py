@@ -60,7 +60,7 @@ class Linear(layers.Layer):
         self.b = tf.Variable(initial_value=init_b(shape=(units,),dtype='float32'),trainable=True)
     
     def set_mask_rand(self):
-        self.mask = tf.constant(np.random.randint(2, size=(input_dim, units)).astype("float32"))
+        self.mask = tf.constant(np.random.randint(2, size=(self.input_dim, self.units)).astype("float32"))
     
     def set_mask(self,mask):
         self.mask = tf.constant(tf.cast(mask, "float32"))
@@ -281,7 +281,7 @@ class Dense_Mask(layers.Layer):
         # return tf.math.atan((2/3)*self.mask)
         # return tf.nn.softsign(self.mask)
         # return tf.math.sigmoid(self.mask)
-        # return tf.math.tanh((2/3)*self.mask) #* 1.7159
+        # return tf.math.tanh(self.mask) #* 1.7159
         # return tf.nn.elu(self.mask)
         # return tf.keras.activations.elu(self.mask, alpha=1.67326324)
         return self.mask
@@ -465,7 +465,7 @@ class Dense_Mask(layers.Layer):
         return outputs, grad
 
     # @tf.function
-    def call(self, inputs, weight_grad=False):
+    def call(self, inputs):
         inputs = tf.cast(inputs, tf.float32)
         
         # print("through layer: ", self.name)
@@ -476,17 +476,17 @@ class Dense_Mask(layers.Layer):
         else:
             # sig_mask = self.sigmoid_mask()
             # sig_mask = self.score_mask()
-            sig_mask = self.tanh_score_mask()
-            # sig_mask = self.tanh_mask()
+            # sig_mask = self.tanh_score_mask()
+            sig_mask = self.tanh_mask()
         weights_masked = tf.multiply(self.w, sig_mask)
         # print("Call in fefo")
          
-        if self.dynamic_scaling is True:
-            # self.no_ones = tf.reduce_sum(weights_masked)
-            # self.multiplier =  tf.math.divide(tf.size(sig_mask, out_type=tf.float32), self.no_ones) #* (1./self.sigmoid_multiplier)
+        if self.dynamic_scaling:
+            self.no_ones = tf.reduce_sum(weights_masked)
+            self.multiplier =  tf.math.divide(tf.size(sig_mask, out_type=tf.float32), self.no_ones) #* (1./self.sigmoid_multiplier)
             # self.multiplier = tf.math.divide(weights_masked - tf.math.reduce_mean(weights_masked), tf.math.reduce_std(weights_masked))
             #print("Multiplier in ", self.name, ": ", self.multiplier) 
-            weights_masked = tf.math.divide(weights_masked , tf.math.reduce_std(weights_masked))#tf.multiply(tf.stop_gradient( self.multiplier ), weights_masked)
+            weights_masked = tf.multiply(self.multiplier, weights_masked)
 
         # print("FF Layer")
         # print("inputs shape")
@@ -736,30 +736,34 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         # for i,var in enumerate(self.trainable_weights):
         #     print(var.name)
 
-
         for i,var in enumerate( self._trainable_weights ):
-            delete_flag = False
-            # print(var.name)
             if "kernel" in var.name:
-                # print("kernel in name")
-                del self._trainable_weights[i]
-                delete_flag = True
-                # del var
-                # self._non_trainable_weights.append(var)
-                # self._trainable_weights.remove(var)
-            # else:
-            #     continue
-            if "bias" in var.name:
-                # print("bias in name")
                 del self._trainable_weights[i]
                 del var
-                # self._non_trainable_weights.append(var)
-                # self._trainable_weights.remove(var)
-            else:
-                if delete_flag is True:
-                    del var
-                else:
-                    continue
+
+        # for i,var in enumerate( self._trainable_weights ):
+        #     delete_flag = False
+        #     # print(var.name)
+        #     if "kernel" in var.name:
+        #         # print("kernel in name")
+        #         del self._trainable_weights[i]
+        #         delete_flag = True
+        #         # del var
+        #         # self._non_trainable_weights.append(var)
+        #         # self._trainable_weights.remove(var)
+        #     # else:
+        #     #     continue
+        #     if "bias" in var.name:
+        #         # print("bias in name")
+        #         del self._trainable_weights[i]
+        #         del var
+        #         # self._non_trainable_weights.append(var)
+        #         # self._trainable_weights.remove(var)
+        #     else:
+        #         if delete_flag is True:
+        #             del var
+        #         else:
+        #             continue
 
     def sigmoid_mask(self):
         # sigmoid_mask = tf.math.sigmoid(tf.multiply(self.mask, self.sigmoid_multiplier))
@@ -780,7 +784,7 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         # return tf.math.sin(self.mask)
         # return tf.math.atan((2/3)*self.mask)
         # return tf.nn.softsign(self.mask)
-        # return tf.math.tanh((2/3)*self.mask) # * 1.7159
+        # return tf.math.tanh(self.mask) # * 1.7159
         # return tf.nn.elu(self.mask)
         # return tf.keras.activations.elu(self.mask, alpha=1.67326324)
         return self.mask
@@ -918,8 +922,8 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         
         # sig_mask = self.sigmoid_mask()
         # sig_mask = self.score_mask()
-        sig_mask = self.tanh_score_mask()
-        # sig_mask = self.tanh_mask()
+        # sig_mask = self.tanh_score_mask()
+        sig_mask = self.tanh_mask()
         
         # print(sig_mask) 
         # print("Shape mask: ", sig_mask.numpy().shape)
@@ -940,12 +944,12 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
             # reshaped_sig_mask = tf.reshape(sig_mask, (single_filter_size,sig_mask.shape[-1]))
             # print("reshaped sig mask size: ", reshaped_sig_mask.shape)
             # self.no_ones = tf.cast(tf.reduce_sum(reshaped_sig_mask, axis=-1), tf.float32)
-            # self.no_ones = tf.cast(tf.reduce_sum(sig_mask), tf.float32)
+            self.no_ones = tf.cast(tf.reduce_sum(sig_mask), tf.float32)
             # print("No ones cnn multiplier: ", self.no_ones)
-            # self.multiplier =  tf.math.divide(self.size, self.no_ones) #* (1./self.sigmoid_multiplier)
+            self.multiplier =  tf.math.divide(self.size, self.no_ones) #* (1./self.sigmoid_multiplier)
             #print("Multiplier in ",self.name," : ", self.multiplier)
             # weights_masked = tf.multiply(self.multiplier, weights_masked)
-            weights_masked = tf.math.divide(weights_masked - tf.math.reduce_mean(weights_masked), tf.math.reduce_std(weights_masked))#tf.multiply(tf.stop_gradient( self.multiplier ), weights_masked)
+            weights_masked = tf.multiply(self.multiplier, weights_masked)
             # self.no_ones = tf.reduce_sum(sig_mask)
             # self.multiplier = (1/self.sigmoid_multiplier) * tf.math.divide(tf.size(sig_mask, out_type=tf.float32), self.no_ones)
             # weights_masked = tf.multiply(self.multiplier, weights_masked)
@@ -999,84 +1003,100 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
     
 class FCN(tf.keras.Model):
     
-    def __init__(self, input_dim, layer_shapes, no_layers=4):
+    def __init__(self, use_bias=False): #, input_dim, layer_shapes, no_layers=4):
         super(FCN,self).__init__()
                 
-        self.linear_in = Linear(*layer_shapes[0])
-        self.linear_h1 = Linear(*layer_shapes[1])
-        self.linear_out = Linear(*layer_shapes[2])
+        # self.linear_in = Linear(*layer_shapes[0])
+        # self.linear_h1 = Linear(*layer_shapes[1])
+        # self.linear_out = Linear(*layer_shapes[2])
         
+        self.linear_in = DenseExt(units=300, use_bias=use_bias)#, input_shape=input_shape)
+        self.linear_h1 = DenseExt(units=100, use_bias=use_bias)
+        self.linear_out = DenseExt(units=10, use_bias=use_bias)
+
+        self.lam = 1.0507009873554804934193349852946
+        self.alpha = 1. #1.6732632423543772848170429916717
+
+    def activation(self, x):
+        return tf.keras.activations.elu(x, alpha=self.alpha)
+        # return tf.nn.relu(x)
+        # return tf.math.sigmoid(x)
+    
+    def call_with_intermediates(self,inputs):
         
+        layerwise_output = []
+        
+        x = self.linear_in(inputs)
+        x = self.activation(x)
+        
+        layerwise_output.append(x)
+        
+        x = self.linear_h1(x)
+        x = self.activation(x)
+
+        layerwise_output.append(x)
+        
+        x = self.linear_out(x)
+        x = tf.nn.softmax(x)
+        
+        return x, layerwise_output
     
     def call(self, inputs):
         
-        
-        layerwise_output = []
-        layerwise_output.append(tf.reduce_mean(inputs, axis=0))
-        
         x = self.linear_in(inputs)
         x = tf.nn.relu(x)
-        layerwise_output.append(tf.reduce_mean(x, axis=0))
         x = self.linear_h1(x)
         x = tf.nn.relu(x) 
-        layerwise_output.append(tf.reduce_mean(x, axis=0))
         x = self.linear_out(x)
         x = tf.nn.softmax(x)
-        layerwise_output.append(tf.reduce_mean(x, axis=0))
-        return x, layerwise_output
-        
-        #x = self.linear_in(inputs)
-        #x = tf.nn.relu(x)
-        #x = self.linear_h1(x)
-        #x = tf.nn.relu(x) 
-        #x = self.linear_out(x)
-        #return tf.nn.softmax(x)
+        return x 
     
 class FCN_Mask(tf.keras.Model):
     
-    def __init__(self, input_dim, layer_shapes, no_layers=4, sigmoid_multiplier=[0.2,0.2,0.2], use_bernoulli_sampler=False, dynamic_scaling=True, k=0.5):
+    def __init__(self, layer_shapes, no_layers=4, sigmoid_multiplier=[0.2,0.2,0.2], use_bernoulli_sampler=False, dynamic_scaling=True, k=0.5):
         super(FCN_Mask,self).__init__()
                 
         self.linear_in = Dense_Mask(*layer_shapes[0], sigmoid_multiplier=sigmoid_multiplier[0], use_bernoulli_sampler = use_bernoulli_sampler, dynamic_scaling=dynamic_scaling, k=k)
         self.linear_h1 = Dense_Mask(*layer_shapes[1], sigmoid_multiplier=sigmoid_multiplier[1], use_bernoulli_sampler = use_bernoulli_sampler, dynamic_scaling=dynamic_scaling, k=k)
         self.linear_out = Dense_Mask(*layer_shapes[2], sigmoid_multiplier=sigmoid_multiplier[2], use_bernoulli_sampler = use_bernoulli_sampler, dynamic_scaling=dynamic_scaling, k=k)
     
-        self.all_layers = [self.linear_in, self.linear_h1, self.linear_out]
+        #self.all_layers = [self.linear_in, self.linear_h1, self.linear_out]
+        self.lam = 1.0507009873554804934193349852946
+        self.alpha = 1. #1.6732632423543772848170429916717
+
+    def activation(self, x):
+        return tf.keras.activations.elu(x, alpha=self.alpha)
+        # return tf.nn.relu(x)
+        # return tf.math.sigmoid(x)
     
-    def get_neuron_outputs(self,inputs):
+    def call_with_intermediates(self,inputs):
         
-        result = []
-        result.append(inputs)
+        layerwise_output = []
         
-        x_in = self.linear_in(inputs)
-        x_in = tf.nn.relu(x_in)
-        result.append(tf.reduce_mean(x_in, axis=0))
-        x_hidden = self.linear_h1(x_in)
-        x_hidden = tf.nn.relu(x_hidden)
-        result.append(tf.reduce_mean(x_hidden, axis=0))
-        x_out = self.linear_out(x_hidden)
-        x_out = tf.nn.softmax(x_out)
-        result.append(tf.reduce_mean(x_out, axis=0))
+        x = self.linear_in(inputs)
+        x = self.activation(x)
         
-        return result
-    
-    def call(self, inputs, weight_grad=False):
+        layerwise_output.append(x)
         
-        # layerwise_output = []
-        # layerwise_output.append(tf.reduce_mean(inputs, axis=0))
+        x = self.linear_h1(x)
+        x = self.activation(x)
+
+        layerwise_output.append(x)
         
-        x = self.linear_in(inputs, weight_grad=weight_grad)
-        x = tf.nn.relu(x)
-        # print("shape after in: ", x.shape)
-        # layerwise_output.append(tf.reduce_mean(x, axis=0))
-        x = self.linear_h1(x, weight_grad=weight_grad)
-        x = tf.nn.relu(x) 
-        # print("shape after h1: ", x.shape)
-        # layerwise_output.append(tf.reduce_mean(x, axis=0))
-        x = self.linear_out(x, weight_grad=weight_grad)
+        x = self.linear_out(x)
         x = tf.nn.softmax(x)
-        # layerwise_output.append(tf.reduce_mean(x, axis=0))
-        # print("x shape: ", x.shape) 
+        
+        return x, layerwise_output
+    
+    def call(self, inputs):
+        
+        
+        x = self.linear_in(inputs)
+        x = tf.nn.relu(x)
+        x = self.linear_h1(x)
+        x = tf.nn.relu(x) 
+        x = self.linear_out(x)
+        x = tf.nn.softmax(x)
         return x #, layerwise_output
     
 class Conv2(tf.keras.Model):
@@ -1173,6 +1193,77 @@ class Conv4(tf.keras.Model):
         
         return tf.nn.softmax(x)
 
+class Conv4_ga(tf.keras.Model):
+
+    def __init__(self, use_bias=False, use_dropout=False, dropout_rate=.2):
+        super(Conv4_ga, self).__init__()  
+        
+        self.use_dropout = use_dropout
+        self.dropout_rate = dropout_rate
+        
+        self.conv_in = Conv2DExt(filters=64, kernel_size=3, use_bias=False)
+        self.bn_1 = BatchNormExt()
+        self.conv_second = Conv2DExt(filters=64, kernel_size=3, use_bias=False)
+        self.bn_2 = BatchNormExt()
+        self.pooling_first = MaxPool2DExt(pool_size=(2,2), strides=(2,2))
+        self.conv_third = Conv2DExt(filters=128, kernel_size=3, use_bias=False)
+        self.bn_3 = BatchNormExt()
+        self.conv_fourth = Conv2DExt(filters=128, kernel_size=3, use_bias=False)
+        self.bn_4 = BatchNormExt()
+        self.pooling_second = MaxPool2DExt(pool_size=(2,2), strides=(2,2))
+        self.flatten = GlobalAveragePooling2DExt()
+        self.linear_first = DenseExt(256, use_bias=False)
+        self.bn_5 = BatchNormExt()
+        self.linear_second = DenseExt(256, use_bias=False)
+        self.bn_6 = BatchNormExt()
+        self.linear_out = DenseExt(10, use_bias=False)
+    
+    def activation(self, x):
+        return tf.keras.activations.elu(x, alpha=1.67326324)
+        # return tf.nn.relu(x)
+        # return tf.math.sigmoid(x)
+
+    def call(self, inputs):
+
+        x = self.conv_in(inputs)
+        x = self.activation(x)
+
+        # x = self.bn_1(x)
+        
+        x = self.conv_second(x)
+        x = self.activation(x)
+        
+        # x = self.bn_2(x)
+        
+        x = self.pooling_first(x)
+
+        x = self.conv_third(x)
+        x = self.activation(x)
+        
+        # x = self.bn_3(x)
+        
+        x = self.conv_fourth(x)
+        x = self.activation(x)
+        
+        # x = self.bn_4(x)
+        
+        x = self.pooling_second(x)
+
+        x = self.flatten(x)
+
+        x = self.linear_first(x)
+        x = self.activation(x)
+        # x = self.bn_5(x)
+        # if self.use_dropout is True:
+        #     x = tf.nn.dropout(x, rate=self.dropout_rate)
+        x = self.linear_second(x)
+        x = self.activation(x)
+        # x = self.bn_6(x)
+        # if self.use_dropout is True:
+        #     x = tf.nn.dropout(x, rate=self.dropout_rate)
+        x = self.linear_out(x)
+        
+        return tf.nn.softmax(x)
 class Conv6(tf.keras.Model):
 
     def __init__(self, use_bias=False, use_dropout=False, dropout_rate=.2):
@@ -1315,13 +1406,13 @@ class Conv2_Mask(tf.keras.Model):
  
         self.conv_in = MaskedConv2D(filters=int(64*width_multiplier), kernel_size=3, input_shape=input_shape, use_bias=use_bias, k=k_cnn,
                                     sigmoid_multiplier=sigmoid_multiplier[0], name="conv_in", dynamic_scaling=dynamic_scaling_cnn)
-        # self.bn_1 = BatchNormExt(trainable=False)
+        self.bn_1 = BatchNormExt(trainable=False)
         conv_in_out_shape = self.conv_in.out_shape
         # self.pooling_first = MaxPool2DExt(input_shape = conv_in_out_shape, pool_size=(2,2))
         # pooling_first_out_shape = self.pooling_first.out_shape
         self.conv_second = MaskedConv2D(filters=int(64*width_multiplier), kernel_size=3, input_shape = conv_in_out_shape, use_bias=use_bias, k=k_cnn,
                                         sigmoid_multiplier=sigmoid_multiplier[1], name="conv_second", dynamic_scaling=dynamic_scaling_cnn)
-        # self.bn_2 = BatchNormExt(trainable=False)
+        self.bn_2 = BatchNormExt(trainable=False)
         conv_in_out_shape = self.conv_in.out_shape
         conv_second_out_shape = self.conv_second.out_shape
         self.pooling = MaxPool2DExt(input_shape = conv_second_out_shape, pool_size=(2,2), strides=(2,2))
@@ -1330,19 +1421,20 @@ class Conv2_Mask(tf.keras.Model):
         # print(pooling_second_out_shape)
         self.linear_first = Dense_Mask(int(tf.math.reduce_prod(pooling_out_shape[1:]).numpy()),int(256*width_multiplier), use_bias=use_bias, dynamic_scaling=dynamic_scaling_dense, k=k_dense,
                                         sigmoid_multiplier=sigmoid_multiplier[2], name="linear_first")
-        # self.bn_3 = BatchNormExt(trainable=False)
+        self.bn_3 = BatchNormExt(trainable=False)
         conv_in_out_shape = self.conv_in.out_shape
         self.linear_second = Dense_Mask(int(256*width_multiplier),int(256*width_multiplier), sigmoid_multiplier=sigmoid_multiplier[3], use_bias=use_bias, dynamic_scaling=dynamic_scaling_dense, name="linear_second", k=k_dense)
-        # self.bn_4 = BatchNormExt(trainable=False)
+        self.bn_4 = BatchNormExt(trainable=False)
         self.linear_out = Dense_Mask(int(256*width_multiplier),10, sigmoid_multiplier=sigmoid_multiplier[4], use_bias=use_bias, dynamic_scaling=dynamic_scaling_dense, name="linear_out", k=k_dense)
 
     def activation(self, x):
-        return tf.keras.activations.elu(x, alpha=1.67326324)
-        # return tf.nn.relu(x)
+        # return tf.keras.activations.elu(x, alpha=1.67326324)
+        return tf.nn.relu(x)
         # return tf.math.sigmoid(x)
 
 
-    def call(self, inputs,  weight_grad=False): #get_intermediate=False,
+    def call(self, inputs, weight_grad=False): #get_intermediate=False,
+
         
         # if get_intermediate is True:
         #     intermediate =  []
@@ -1352,7 +1444,7 @@ class Conv2_Mask(tf.keras.Model):
 
         x = self.conv_in(inputs, weight_grad=False)
         x = self.activation(x)
-        # x = self.bn_1(x)
+        x = self.bn_1(x)
         # x = self.pooling_first(x)
         # if get_intermediate is True:
         #     # intermediate = tf.ragged.constant(x)
@@ -1361,7 +1453,7 @@ class Conv2_Mask(tf.keras.Model):
         
         x = self.conv_second(x, weight_grad=False)
         x = self.activation(x)
-        # x = self.bn_2(x)
+        x = self.bn_2(x)
 
         # if get_intermediate is True:
         #     # intermediate = tf.stack([intermediate, x])
@@ -1373,22 +1465,22 @@ class Conv2_Mask(tf.keras.Model):
 
         x = self.linear_first(x, weight_grad=False)
         x = self.activation(x)
-        # x = self.bn_3(x)
+        x = self.bn_3(x)
 
         # if get_intermediate is True:
         #     intermediate.append(x)
-        if self.use_dropout is True:
-            x = tf.nn.dropout(x, rate=self.dropout_rate)
+        # if self.use_dropout is True:
+        #     x = tf.nn.dropout(x, rate=self.dropout_rate)
         # layerwise_output.append(tf.reduce_mean(x, axis=0))
         
         x = self.linear_second(x, weight_grad=False)
         x = self.activation(x)
-        # x = self.bn_4(x)
+        x = self.bn_4(x)
 
         # if get_intermediate is True:
         #     intermediate.append(x)
-        if self.use_dropout is True:
-            x = tf.nn.dropout(x, rate=self.dropout_rate)
+        # if self.use_dropout is True:
+        #     x = tf.nn.dropout(x, rate=self.dropout_rate)
         # layerwise_output.append(tf.reduce_mean(x, axis=0))
         
         x = self.linear_out(x, weight_grad=False)
@@ -1459,41 +1551,51 @@ class Conv4_Mask(tf.keras.Model):
         self.linear_second = Dense_Mask(int(256*width_multiplier),int(256*width_multiplier), sigmoid_multiplier=sigmoid_multiplier[5], name="linear_second", k=k_dense, dynamic_scaling=dynamic_scaling_dense, use_bias=use_bias)
         self.bn_6 = BatchNormExt(trainable=False)
         self.linear_out = Dense_Mask(int(256*width_multiplier),10, sigmoid_multiplier=sigmoid_multiplier[6], name="linear_out", k=k_dense, dynamic_scaling=dynamic_scaling_dense, use_bias=use_bias)
+        
+        self.lam = tf.constant(1.0507009873554804934193349852946)
+        self.alpha = tf.constant(1.6732632423543772848170429916717)
 
+    def selu(self, x):
 
+        x = tf.where(x > 0, x*self.lam, self.lam*(self.alpha*tf.math.exp(x) - self.alpha))
+
+        return x
 
     def activation(self, x):
-        return x * tf.math.sigmoid(x)
-        # return tf.keras.activations.elu(x, alpha=1.67326324)
+        # return self.selu(x) #x * tf.math.sigmoid(x)
+        return tf.keras.activations.elu(x, alpha=1.0)
+        # return 1.0507009873554804934193349852946 * tf.keras.activations.elu(x, alpha=1.6732632423543772848170429916717)
         # return tf.nn.leaky_relu(x, alpha=.5)
         # return tf.nn.relu(x)
         # return tf.math.sigmoid(x)
-
-    def call(self, inputs):
-        # layerwise_output = []
-        # layerwise_output.append(tf.reduce_mean(inputs, axis=0))
+    
+    def call_with_intermediates(self, inputs):
+        
+        layerwise_output = []
 
         x = self.conv_in(inputs)
         # x = self.bn_1(x)
         x = self.activation(x)
         # x = self.pooling_first(x)
-        # layerwise_output.append(tf.reduce_mean(x, axis=0))
+        layerwise_output.append(x)
         
         x = self.conv_second(x)
         # x = self.bn_2(x)
         x = self.activation(x)
         x = self.pooling_first(x)
-        # layerwise_output.append(tf.reduce_mean(x, axis=0))
+        layerwise_output.append(x)
         
         x = self.conv_third(x)
         # x = self.bn_3(x)
         x = self.activation(x)
+        layerwise_output.append(x)
     
         # print(x.shape)
         
         x = self.conv_fourth(x)
         # x = self.bn_4(x)
         x = self.activation(x)
+        layerwise_output.append(x)
         x = self.pooling_second(x)
 
         x = self.flatten(x)
@@ -1501,7 +1603,7 @@ class Conv4_Mask(tf.keras.Model):
         x = self.linear_first(x)
         # x = self.bn_5(x)
         x = self.activation(x)
-        # layerwise_output.append(tf.reduce_mean(x, axis=0))
+        layerwise_output.append(x)
         
         # if self.use_dropout is True:
         #     x = tf.nn.dropout(x, rate=self.dropout_rate)
@@ -1509,6 +1611,57 @@ class Conv4_Mask(tf.keras.Model):
         x = self.linear_second(x)
         # x = self.bn_6(x)
         x = self.activation(x)
+        layerwise_output.append(x)
+        
+        # if self.use_dropout is True:
+        #     x = tf.nn.dropout(x, rate=self.dropout_rate)
+
+        x = self.linear_out(x)
+        x = tf.nn.softmax(x)
+
+        return x,layerwise_output
+
+    @tf.function
+    def call(self, inputs):
+        # layerwise_output = []
+        # layerwise_output.append(tf.reduce_mean(inputs, axis=0))
+
+        x = self.conv_in(inputs)
+        x = self.activation(x)
+        # x = self.bn_1(x)
+        # x = self.pooling_first(x)
+        # layerwise_output.append(tf.reduce_mean(x, axis=0))
+        
+        x = self.conv_second(x)
+        x = self.activation(x)
+        # x = self.bn_2(x)
+        x = self.pooling_first(x)
+        # layerwise_output.append(tf.reduce_mean(x, axis=0))
+        
+        x = self.conv_third(x)
+        x = self.activation(x)
+        # x = self.bn_3(x)
+    
+        # print(x.shape)
+        
+        x = self.conv_fourth(x)
+        x = self.activation(x)
+        # x = self.bn_4(x)
+        x = self.pooling_second(x)
+
+        x = self.flatten(x)
+
+        x = self.linear_first(x)
+        x = self.activation(x)
+        # x = self.bn_5(x)
+        # layerwise_output.append(tf.reduce_mean(x, axis=0))
+        
+        # if self.use_dropout is True:
+        #     x = tf.nn.dropout(x, rate=self.dropout_rate)
+
+        x = self.linear_second(x)
+        x = self.activation(x)
+        # x = self.bn_6(x)
         # layerwise_output.append(tf.reduce_mean(x, axis=0))
         
         # if self.use_dropout is True:
