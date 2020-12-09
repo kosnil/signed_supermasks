@@ -21,8 +21,24 @@ class initializer:
             fan_in *= float(dim)
             fan_out *= float(dim)
         return fan_in, fan_out
+
+    def svd_orthonormal(self,shape):
+    # Orthonorm init code is taked from Lasagne
+    # https://github.com/Lasagne/Lasagne/blob/master/lasagne/init.py
+        if len(shape) < 2:
+            raise RuntimeError("Only shapes of length 2 or more are supported.")
+        flat_shape = (shape[0], np.prod(shape[1:]))
+        a = np.random.standard_normal(flat_shape)
+        u, _, v = np.linalg.svd(a, full_matrices=False)
+        q = u if u.shape == flat_shape else v
+        print(f"svd init with std: {np.std(q)}")
+        q = q.reshape(shape)
+        return q
         
     def initialize_weights(self, dist, shape, mu=0, sigma=1, factor=1., mu_bi=[0,0], sigma_bi=[0,0], constant=1):
+
+        if dist =="svd":
+            return self.svd_orthonormal(shape)
         if dist == "std_normal":
             return np.random.randn(*shape)
         if dist == "bimodal_normal":
@@ -73,7 +89,7 @@ class initializer:
                     sigma = 3.0 / fan_out
                 # correct xavier
                 if sigma == -7: 
-                    sigma = np.sqrt(3) / np.sqrt(fan_in + fan_out)
+                    sigma = np.sqrt(6) / np.sqrt(fan_in + fan_out)
                 # correct kaiming
                 if sigma == -8:
                     sigma = np.sqrt(6) / np.sqrt(fan_in)
@@ -111,10 +127,10 @@ class initializer:
                     sigma = 3.0 / fan_out
                 # correct xavier
                 if sigma == -7: 
-                    sigma = np.sqrt(3) / np.sqrt(fan_in + fan_out)
+                    sigma = np.sqrt(2) / np.sqrt(fan_in + fan_out)
                 # correct kaiming
                 if sigma == -8:
-                    sigma = np.sqrt(6) / np.sqrt(fan_in)
+                    sigma = np.sqrt(2) / np.sqrt(fan_in)
 
                 sigma *= factor
                 print(f"Glorot normal with sigma {sigma:.4f}")
@@ -141,9 +157,9 @@ class initializer:
             elif sigma == -6:
                 sigma = 3.0 / fan_out
             elif sigma == -7:
-                sigma = np.sqrt(3) / np.sqrt(fan_in + fan_out)
+                sigma = np.sqrt(2) / np.sqrt(fan_in + fan_out)
             elif sigma == -8:
-                sigma = np.sqrt(6) / np.sqrt(fan_in)
+                sigma = np.sqrt(2) / np.sqrt(fan_in)
 
             sigma *= factor
             print("Constant with: ", sigma)
@@ -170,10 +186,10 @@ class initializer:
                 sigma = 3.0 / fan_out
             # correct xavier
             elif sigma == -7: 
-                sigma = np.sqrt(3) / np.sqrt(fan_in + fan_out)
+                sigma = np.sqrt(2) / np.sqrt(fan_in + fan_out)
             # correct kaiming
             elif sigma == -8:
-                sigma = np.sqrt(6) / np.sqrt(fan_in)
+                sigma = np.sqrt(2) / np.sqrt(fan_in)
             
             sigma *= factor
 
@@ -219,10 +235,11 @@ class initializer:
                         W = self.initialize_weights(mode, [l.input_dim, l.units], mu=mu, sigma=sigma, factor=factor,
                                                     mu_bi=mu_bi, sigma_bi=sigma_bi, constant=constant)
                         if set_mask is False:
-                            b = self.initialize_weights("ones", [l.units])
-                            initial_weights.append([W,b])
+                            #b = self.initialize_weights("ones", [l.units])
+                            #initial_weights.append([W,b])
                             # l.set_weights([W,b])
                             # l.set_weights([W])
+                            
                             l.set_normal_weights(W)
                             l.trainable = False
                         else:

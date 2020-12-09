@@ -1,6 +1,16 @@
 **/weights
 **/img
+**/latex
+**/plots
+**/results
 **/_pycache_
 **/.ipynb_checkpoints
 **/.vscode
 **/__pycache__
+
+*.ipynb
+*.pdf
+*.pgf
+
+evo_opt.py
+
