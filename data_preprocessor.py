@@ -3,6 +3,14 @@ import tensorflow_datasets as tfds
 import numpy as np
 
 def data_loader(dataset:str):
+    """Loads the specified dataset
+
+    Args:
+        dataset (str): [description]
+
+    Returns:
+        [type]: [description]
+    """
     if dataset == "mnist":
         (ds_train, ds_test), ds_info = tfds.load('mnist',
                                                 split=['train', 'test'],
@@ -22,7 +30,8 @@ def data_loader(dataset:str):
 
 # @tf.function
 def normalize_cifar(image, label):
-    """Normalizes images: `uint8` -> `float32`."""
+    """Normalizes the CIFAR-10 Dataset by casting all values to flat and then standardizing each image separately
+    """
     image = tf.cast(image, tf.float32)
     image = tf.image.per_image_standardization(image)
     return image, tf.one_hot(label,10)
@@ -36,7 +45,15 @@ def normalize_mnist(image, label):
 
 # @tf.function
 def prep_data(ds, ds_info):
-    
+    """Prepares the dataset
+
+    Args:
+        ds (tf.dataset): dataset to be used
+        ds_info (tf.dataset.info): info about the dataset
+
+    Returns:
+        tf.dataset: the standardized and batched dataset
+    """
     if ds_info.name == "mnist":
         ds = ds.map(normalize_mnist, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     else:
@@ -49,6 +66,14 @@ def prep_data(ds, ds_info):
     return ds
 
 def data_handler(dataset: str):
+    """Pipeline that loads and prepares the dataset
+
+    Args:
+        dataset (str): name of the dataset, either "mnist" or "cifar"
+
+    Returns:
+        tf.dataset: standardized and batched dataset
+    """
     ds_train, ds_test, ds_info = data_loader(dataset)
     ds_train = prep_data(ds_train, ds_info)
     ds_test = prep_data(ds_test, ds_info)

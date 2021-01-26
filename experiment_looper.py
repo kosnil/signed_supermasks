@@ -20,6 +20,14 @@ from conv_networks import Conv2_Mask, Conv4_Mask, Conv6_Mask, Conv8_Mask
 from dense_networks import FCN, FCN_Mask
 
 def parse_config_file(path: str) -> dict:
+    """Parse and load the config file
+
+    Args:
+        path (str): path to file
+
+    Returns:
+        dict: config
+    """
     
     with open(path, 'r') as stream:
         try:
@@ -30,14 +38,25 @@ def parse_config_file(path: str) -> dict:
     
 
 def network_builder(config: dict) -> tf.keras.Model:
-    
+    """Given the config dictionary, this function builds the there defined tensorflow model accordingly. 
+    It is possible to select FCN, Conv2, Conv4, Conv6 and Conv8
 
+    Args:
+        config (dict): configuration in which the model is defined
+
+    Returns:
+        tf.keras.Model: model
+    """
+    
+    #depending on the dataset the model is trained on, choose the appropriate input shape.
     if config["data"] == "cifar":
         input_shape = (128,32,32,3)
     elif config["data"] == "mnist":
         input_shape = (128,784)
     
     #go through necessary properties in config to build up the network step by step
+    
+    #baseline
     if config["baseline"] == True: 
         if config["model"]["type"] == "FCN":
             model = FCN(use_bias=False)
@@ -56,7 +75,7 @@ def network_builder(config: dict) -> tf.keras.Model:
         model.build(input_shape=input_shape)
 
         return model     
-
+    #signed supermask
     else:
         if config["model"]["type"] == "FCN":
             model = FCN_Mask(masking_method=config["model"]["masking_method"],
@@ -122,6 +141,16 @@ def network_builder(config: dict) -> tf.keras.Model:
         return model
     
 def initialize_model(model:tf.keras.Model, config:dict, run_number:int) -> tf.keras.Model:    
+    """Loads the weights and mask values defined in the config file
+
+    Args:
+        model (tf.keras.Model): model to be trained
+        config (dict): configuration of model and training
+        run_number (int): number of experiment (There are only 50 pre-defined weight and mask tensors)
+
+    Returns:
+        tf.keras.Model: model with initialized weight and mask values
+    """
 
     init = initializer()
     
@@ -135,7 +164,18 @@ def initialize_model(model:tf.keras.Model, config:dict, run_number:int) -> tf.ke
     
     return model     
 
-def repeat_experiment(config:dict):
+def repeat_experiment(config:dict) -> list:
+    """Loads the dataset and then loops through each experiment for in the config defined amount of runs.
+    After loading the data (which is always the same), the order is as follows:
+    Build model (network_builder) --> Initialize model (initialize_model) --> Initialize Modeltrainer --> 
+    Train Model (mt.train) --> Append intermediate results to the "results"-array, which holds all results  
+
+    Args:
+        config (dict): config file
+
+    Returns:
+        [list]: basic list that holds the results of all runs for the given model
+    """
     
     print("Loading dataset...")
     ds_train, ds_test = data_handler(config["data"])
@@ -198,6 +238,12 @@ def findnth(haystack, needle, n):
     return len(haystack)-len(parts[-1])-len(needle)
 
 def save_results(results: dict, filename: str):
+    """This function saves the results obtrained from training a model
+
+    Args:
+        results (dict): results that are to be saved
+        filename (str): name of the file that holds results
+    """
     
     with open("./results/"+filename+".pkl", 'wb') as handle:
         pickled = pickle.dumps(results)
@@ -205,6 +251,11 @@ def save_results(results: dict, filename: str):
         handle.write(optimized_pickle)
 
 def main_pipeline(config_path: str):
+    """Pipeline that laods the config file, created and initializes the model, trains it and finally saves the results
+
+    Args:
+        config_path (str): path to config file
+    """
     print("Load config...")
     config = parse_config_file(path = config_path)
     print("Config loaded!")
@@ -216,12 +267,4 @@ def main_pipeline(config_path: str):
     print("Saving results...")
     save_results(results=results, filename=config_name)
     print("Results saved!")
-# if __name__ == '__main__':
-#     #import argparse
-
-#     parser = argparse.ArgumentParser(description='')
-#     parser.add_argument('--config', required=True,
-#                         help='path to config file')
-#     args = parser.parse_args()
-#     main_pipeline(config_path=args.config_path)
 
