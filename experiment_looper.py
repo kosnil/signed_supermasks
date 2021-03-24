@@ -15,7 +15,7 @@ from weight_initializer import initializer
 from data_preprocessor import data_handler
 
 from conv_networks import Conv2, Conv4, Conv6, Conv8
-from conv_networks import Conv2_Mask, Conv4_Mask, Conv6_Mask, Conv8_Mask
+from conv_networks import Conv2_Mask, Conv4_Mask, Conv6_Mask, Conv8_Mask, VGG16_Mask, VGG19_Mask
 
 from dense_networks import FCN, FCN_Mask
 
@@ -119,6 +119,30 @@ def network_builder(config: dict) -> tf.keras.Model:
 
         elif config["model"]["type"] == "Conv8":
             model = Conv8_Mask(input_shape=input_shape,
+                                use_bias=False,
+                                masking_method=config["model"]["masking_method"],
+                                # tanh_th=config["model"]["tanh_th"],
+                                k_cnn=config["model"]["k_cnn"],
+                                k_dense=config["model"]["k_dense"],
+                                dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
+                                dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
+                                width_multiplier=config["model"]["width_multiplier"],
+                                use_dropout=config["model"]["use_dropout"])
+
+        elif config["model"]["type"] == "VGG16":
+            model = VGG16_Mask(input_shape=input_shape,
+                                use_bias=False,
+                                masking_method=config["model"]["masking_method"],
+                                # tanh_th=config["model"]["tanh_th"],
+                                k_cnn=config["model"]["k_cnn"],
+                                k_dense=config["model"]["k_dense"],
+                                dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
+                                dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
+                                width_multiplier=config["model"]["width_multiplier"],
+                                use_dropout=config["model"]["use_dropout"])
+
+        elif config["model"]["type"] == "VGG19":
+            model = VGG19_Mask(input_shape=input_shape,
                                 use_bias=False,
                                 masking_method=config["model"]["masking_method"],
                                 # tanh_th=config["model"]["tanh_th"],

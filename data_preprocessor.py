@@ -6,10 +6,10 @@ def data_loader(dataset:str):
     """Loads the specified dataset
 
     Args:
-        dataset (str): [description]
+        dataset (str): name of the dataset, either "mnist" or "cifar"
 
     Returns:
-        [type]: [description]
+        [tf.dataset]: training and testing set with an additional object "ds_info" that holds more information about the dataset
     """
     if dataset == "mnist":
         (ds_train, ds_test), ds_info = tfds.load('mnist',
