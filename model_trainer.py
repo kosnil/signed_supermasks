@@ -4,6 +4,15 @@ import tensorflow_addons as tfa
 import time
 
 class ModelTrainer():
+    """Contains all functions necessary to train and evaluate signed Supermask and "normal" models
+    
+    Arguments:
+        model (tf.keras.Model): model to be trained
+        ds_train (tf.data.Dataset): training dataset
+        ds_test (tf.data.Dataset): test dataset
+        optimizer_args (dict): specifies parameters for the optimizer used to train model
+    """
+
     def __init__(self, model, ds_train, ds_test, optimizer_args={}):
         self.model = model
         
@@ -13,8 +22,13 @@ class ModelTrainer():
             if "decay_steps" not in optimizer_args:
                 optimizer_args["decay_steps"] = 10  
 
-            lr = tf.keras.optimizers.schedules.ExponentialDecay(float(optimizer_args["lr"]), decay_steps=steps_per_epoch*optimizer_args["decay_steps"], decay_rate=0.96, staircase=True)
-            weight_decay = tf.keras.optimizers.schedules.ExponentialDecay(float(optimizer_args["weight_decay"]), decay_steps=steps_per_epoch*optimizer_args["decay_steps"], decay_rate=0.96, staircase=True)
+            lr = tf.keras.optimizers.schedules.ExponentialDecay(float(optimizer_args["lr"]), 
+                                                                decay_steps=steps_per_epoch*optimizer_args["decay_steps"], 
+                                                                decay_rate=0.96, staircase=True)
+            weight_decay = tf.keras.optimizers.schedules.ExponentialDecay(float(optimizer_args["weight_decay"]), 
+                                                                          decay_steps=steps_per_epoch*optimizer_args["decay_steps"], 
+                                                                          decay_rate=0.96, 
+                                                                          staircase=True)
         else:
             lr = float(optimizer_args["lr"])
             weight_decay = float(optimizer_args["weight_decay"])
@@ -29,15 +43,23 @@ class ModelTrainer():
         self.test_loss_fn = tf.keras.losses.CategoricalCrossentropy()
         
         if optimizer_args["type"] == "sgd":
-            self.optimizer = tf.keras.optimizers.SGD(learning_rate=lr, momentum=optimizer_args["momentum"], nesterov=optimizer_args["nesterov"])
+            self.optimizer = tf.keras.optimizers.SGD(learning_rate=lr, 
+                                                     momentum=optimizer_args["momentum"], 
+                                                     nesterov=optimizer_args["nesterov"])
         elif optimizer_args["type"] == "sgdw":
-            self.optimizer = tfa.optimizers.SGDW(learning_rate=lr, momentum=optimizer_args["momentum"], nesterov=optimizer_args["nesterov"], weight_decay=weight_decay)
+            self.optimizer = tfa.optimizers.SGDW(learning_rate=lr, 
+                                                 momentum=optimizer_args["momentum"], 
+                                                 nesterov=optimizer_args["nesterov"], 
+                                                 weight_decay=weight_decay)
         elif optimizer_args["type"] == "adam":
             self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
         elif optimizer_args["type"] == "adamw":
-            self.optimizer = tfa.optimizers.AdamW(learning_rate=lr, weight_decay=weight_decay)
+            self.optimizer = tfa.optimizers.AdamW(learning_rate=lr, 
+                                                  weight_decay=weight_decay)
         elif optimizer_args["type"] == "rmsprop":
-            self.optimizer = tf.keras.optimizers.RMSprop(learning_rate=lr, momentum=optimizer_args["momentum"], centered=optimizer_args["centered"])
+            self.optimizer = tf.keras.optimizers.RMSprop(learning_rate=lr, 
+                                                         momentum=optimizer_args["momentum"], 
+                                                         centered=optimizer_args["centered"])
         
         self.ds_train = ds_train
         self.ds_test = ds_test
@@ -72,7 +94,7 @@ class ModelTrainer():
         """Single train step
 
         Args:
-            x_batch (tf.dataset): data
+            x_batch (tf.dataset): features
             y_batch (tf.dataset): labels
 
         Returns:
@@ -91,11 +113,15 @@ class ModelTrainer():
         return loss, predicted
     
     def calc_ones_ratio(self):
-        """Calculates the ratio of remaining weights
+        """
+        Calculates the ratio of remaining weights
         """
         
-        global_no_ones = np.sum([np.sum(np.abs(layer.tanh_mask())) for layer in self.model.layers if layer.type == "fefo" or layer.type == "conv"])
-        global_size = np.sum([tf.size(layer.mask) for layer in self.model.layers if layer.type == "fefo" or layer.type == "conv"])
+        global_no_ones = np.sum([np.sum(np.abs(layer.tanh_mask())) for layer in self.model.layers 
+                                 if layer.type == "fefo" or layer.type == "conv"])
+        
+        global_size = np.sum([tf.size(layer.mask) for layer in self.model.layers 
+                              if layer.type == "fefo" or layer.type == "conv"])
 
         remaining_ones_ratio = (global_no_ones/global_size)*100
 
@@ -134,7 +160,8 @@ class ModelTrainer():
                 self.evaluate()
                 self.calc_ones_ratio()
             
-            self.final_masks = [layer.bernoulli_mask.numpy() for layer in self.model.layers if layer.type == "fefo" or layer.type == "conv"]
+            self.final_masks = [layer.bernoulli_mask.numpy() for layer in self.model.layers 
+                                if layer.type == "fefo" or layer.type == "conv"]
 
         else:
             
