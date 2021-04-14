@@ -84,74 +84,68 @@ def network_builder(config: dict) -> tf.keras.Model:
                              dynamic_scaling=config["model"]["dynamic_scaling_dense"])
         elif config["model"]["type"] == "Conv2":
             model = Conv2_Mask(input_shape=input_shape,
-                                use_bias=False,
                                 masking_method=config["model"]["masking_method"],
                                 # tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
                                 dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
-                                width_multiplier=config["model"]["width_multiplier"],
-                                use_dropout=config["model"]["use_dropout"])
+                                width_multiplier=config["model"]["width_multiplier"])
+                                # use_dropout=config["model"]["use_dropout"])
         elif config["model"]["type"] == "Conv4":
             model = Conv4_Mask(input_shape=input_shape,
-                                use_bias=False,
                                 masking_method=config["model"]["masking_method"],
                                 # tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
                                 dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
-                                width_multiplier=config["model"]["width_multiplier"],
-                                use_dropout=config["model"]["use_dropout"])
+                                width_multiplier=config["model"]["width_multiplier"])
+                                #use_dropout=config["model"]["use_dropout"])
 
         elif config["model"]["type"] == "Conv6":
             model = Conv6_Mask(input_shape=input_shape,
-                                use_bias=False,
                                 masking_method=config["model"]["masking_method"],
                                 # tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
                                 dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
-                                width_multiplier=config["model"]["width_multiplier"],
-                                use_dropout=config["model"]["use_dropout"])
+                                width_multiplier=config["model"]["width_multiplier"])
+                                #use_dropout=config["model"]["use_dropout"])
 
         elif config["model"]["type"] == "Conv8":
             model = Conv8_Mask(input_shape=input_shape,
-                                use_bias=False,
                                 masking_method=config["model"]["masking_method"],
                                 # tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
                                 dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
-                                width_multiplier=config["model"]["width_multiplier"],
-                                use_dropout=config["model"]["use_dropout"])
+                                width_multiplier=config["model"]["width_multiplier"])
+                                #use_dropout=config["model"]["use_dropout"])
 
         elif config["model"]["type"] == "VGG16":
             model = VGG16_Mask(input_shape=input_shape,
-                                use_bias=False,
                                 masking_method=config["model"]["masking_method"],
                                 # tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
                                 dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
-                                width_multiplier=config["model"]["width_multiplier"],
-                                use_dropout=config["model"]["use_dropout"])
+                                width_multiplier=config["model"]["width_multiplier"])
+                                #use_dropout=config["model"]["use_dropout"])
 
         elif config["model"]["type"] == "VGG19":
             model = VGG19_Mask(input_shape=input_shape,
-                                use_bias=False,
                                 masking_method=config["model"]["masking_method"],
                                 # tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
                                 dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
-                                width_multiplier=config["model"]["width_multiplier"],
-                                use_dropout=config["model"]["use_dropout"])
+                                width_multiplier=config["model"]["width_multiplier"])
+                                #use_dropout=config["model"]["use_dropout"])
 
         else:
             print("Please define a model")
@@ -164,7 +158,9 @@ def network_builder(config: dict) -> tf.keras.Model:
 
         return model
     
-def initialize_model(model:tf.keras.Model, config:dict, run_number:int) -> tf.keras.Model:    
+def initialize_model(model:tf.keras.Model, 
+                     config:dict, 
+                     run_number:int) -> tf.keras.Model:    
     """Loads the weights and mask values defined in the config file
 
     Args:
@@ -181,10 +177,12 @@ def initialize_model(model:tf.keras.Model, config:dict, run_number:int) -> tf.ke
     weight_file_name = config["model"]["type"] + "_weights_" + str(run_number) + ".pkl"
     mask_file_name = config["model"]["type"] + "_mask_" + str(run_number) + ".pkl"
     
-    model = init.set_loaded_weights(model = model, path = config["path_weights"]+weight_file_name)
+    model = init.set_loaded_weights(model = model, 
+                                    path = config["path_weights"]+weight_file_name)
     
     if config["baseline"] == False:
-        model = init.set_loaded_weights(model = model, path = config["path_masks"]+mask_file_name)
+        model = init.set_loaded_weights(model = model, 
+                                        path = config["path_masks"]+mask_file_name)
     
     return model     
 
@@ -223,14 +221,22 @@ def repeat_experiment(config:dict) -> list:
         
         print("Model initialized!")
 
-        mt = ModelTrainer(model, ds_train = ds_train, ds_test = ds_test, optimizer_args=config["optimizer"])
+        mt = ModelTrainer(model, 
+                          ds_train = ds_train, 
+                          ds_test = ds_test, 
+                          optimizer_args=config["optimizer"])
         
         time0 = time.time()
         print("Start training...")
         if config["baseline"] == False:
-            mt.train(epochs=config["training"]["epochs"], logging_interval=20)
+            mt.train(epochs=config["training"]["epochs"], 
+                     logging_interval=20)
+            
         else:
-            mt.train(epochs=config["training"]["epochs"], logging_interval=20, supermask=False)
+            mt.train(epochs=config["training"]["epochs"], 
+                     logging_interval=20, 
+                     supermask=False)
+            
         print("Training successful!")
         time1 = time.time()
         print("Time needed for training: ", str(time1-time0))        
@@ -261,7 +267,8 @@ def findnth(haystack, needle, n):
         return -1
     return len(haystack)-len(parts[-1])-len(needle)
 
-def save_results(results: dict, filename: str):
+def save_results(results: dict, 
+                 filename: str):
     """This function saves the results obtrained from training a model
 
     Args:
@@ -289,6 +296,7 @@ def main_pipeline(config_path: str):
     
     config_name = config_path[findnth(config_path, "/", 1)+1:config_path.rfind(".")]
     print("Saving results...")
-    save_results(results=results, filename=config_name)
+    save_results(results=results, 
+                 filename=config_name)
     print("Results saved!")
 
