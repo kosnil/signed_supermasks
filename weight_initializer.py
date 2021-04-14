@@ -7,6 +7,8 @@ import pickletools
 from copy import copy
 
 class initializer:
+    """Use this class to initialize weights of some tensorflow/keras model
+    """
     
     def __init__(self, seed=7531):
         print("initializer")
@@ -16,6 +18,14 @@ class initializer:
         tf.random.set_seed(self.seed)
         
     def get_fans(self, shape: tuple) -> Tuple[int, int]:
+        """Get fan_in, fan_out of a layer with given shape
+
+        Args:
+            shape (tuple): shape of layer
+
+        Returns:
+            Tuple[int, int]: fan_in, fan_out of given shape
+        """
         fan_in = float(shape[-2]) if len(shape) > 1 else float(shape[-1])
         fan_out = float(shape[-1])
         for dim in shape[:-2]:
@@ -33,6 +43,22 @@ class initializer:
                            mu_bi=[0,0], 
                            sigma_bi=[0,0], 
                            constant=1) -> np.ndarray:
+        """Initializes weights for a given shape
+
+        Args:
+            dist (str): distribution from which the weight values are drawn
+            shape (tuple): shape of weights to be initialized
+            mu (int, optional): mean of distribution from which weights are drawn. Defaults to 0.
+            sigma (int, optional): standard deviation from which weights are drawn. 
+                                   Negative integers set sigma to a fan_in/fan_out variant such as He/Xavier. Defaults to 1.
+            factor ([type], optional): constant by which initialized weights are multiplied with. Defaults to 1..
+            mu_bi (list, optional): further specifies mean if dist == "bimodal_normal". Defaults to [0,0].
+            sigma_bi (list, optional): further specified standard deviation if dist == "bimodal_normal". Defaults to [0,0].
+            constant (int, optional): If weights are initialized to a constant, this variable further defines which constant should be chosen. Defaults to 1.
+
+        Returns:
+            np.ndarray: initialized weights in given shape
+        """
         if dist == "std_normal":
             return np.random.randn(*shape)
         if dist == "bimodal_normal":
@@ -222,7 +248,32 @@ class initializer:
                         save_suffix="", 
                         weight_as_constant=False, 
                         layer_shapes=None):
-        i = 0
+        """Set weights of a given tf model manually (in contrast to letting tensorflow/keras set the weights)
+
+        Args:
+            model (tf.keras.Model): model for which weights need to be set
+            layers (list, optional): specify specific layers of model whose weights need to be set. If layers != None 
+            those layers that are not contained in this list will be ignored. Defaults to None.
+            mode (str, optional): distribution of weight initialization. Defaults to "normal".
+            mu (int, optional): mean of distribution. Defaults to 0.
+            sigma (float, optional): standard deviation of distribution. Defaults to 0.05.
+            factor (float, optional): constant initialized weights get multiplied with. Defaults to 1..
+            constant (int, optional): [description]. Defaults to 1.
+            set_mask (bool, optional): if True, function will set mask weights. If False, function will set "weight weights". Defaults to False.
+            mu_bi (list, optional): if mode == "bimodal_normal" mu_bi specifies the distribution. Otherwise ignored. Defaults to [0,0].
+            sigma_bi (list, optional): if mode == "bimodal_normal" sigmi_bi specifies the distribution. 
+                                       Otherwise ignored. Defaults to [0,0].
+            save_to (str, optional): if weights should be saved to a file, specify file path here. 
+                                    If not specified, weights will not be saved. Defaults to "".
+            save_suffix (str, optional): optional suffix to filename. Defaults to "".
+            weight_as_constant (bool, optional): specifies whether the weights should be set to frozen. Defaults to False.
+            layer_shapes (list, optional): list of layer shapes. Defaults to None.
+
+        Returns:
+            model (tf.keras.Model): model with newly initialized weights
+            initialized_weights (list): list of initialized weights
+        """
+        #i = 0
 
         initial_weights = []
 
@@ -325,7 +376,7 @@ class initializer:
                         continue
         else:
             layer_counter = 0
-            for i,l in enumerate(model.layers):
+            for l in model.layers:
                 if l.type is "fefo" or l.type is "conv":
                     W = layers[layer_counter]
                     l.set_weights([W])
@@ -336,18 +387,27 @@ class initializer:
                     continue
 
         if save_to != "":
-            # with open(save_to+"mask"+set_mask+"_"+mode+"_"+sigma+"_"+factor+save_suffix+".pkl", 'wb') as handle:
+
             with open(save_to+save_suffix+".pkl", 'wb') as handle:
                 pickled = pickle.dumps(initial_weights)
                 optimized_pickle = pickletools.optimize(pickled)
                 handle.write(optimized_pickle)
-                #pickle.dump(initial_weights, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 
         return model, initial_weights
 
     def set_loaded_weights(self, 
                            model: tf.keras.Model, 
                            path:str) -> tf.keras.Model:
+        """Sets weights of a specified model from a file
+
+        Args:
+            model (tf.keras.Model): model for which the weights need to be specified
+            path (str): path to file which holds the weights
+
+        Returns:
+            tf.keras.Model: model with set weights
+        """
 
         with open(path, "rb") as f:
             p = pickle.Unpickler(f)
