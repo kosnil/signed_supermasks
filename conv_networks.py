@@ -297,7 +297,7 @@ class Conv2_Mask(tf.keras.Model):
 
     def __init__(self, 
                  input_shape, 
-                 use_bias=False, 
+                #  use_bias=False, 
                 #  use_dropout=False,
                 #  dropout_rate=0.2, 
                  dynamic_scaling_cnn=True, 
@@ -305,7 +305,7 @@ class Conv2_Mask(tf.keras.Model):
                  k_cnn=0.4, 
                  k_dense=0.3, 
                  width_multiplier=1, 
-                 masking_method="variable"):
+                 masking_method="fixed"):
         
         super(Conv2_Mask, self).__init__()
 
@@ -315,11 +315,11 @@ class Conv2_Mask(tf.keras.Model):
         self.conv_in = MaskedConv2D(filters=int(64*width_multiplier), 
                                     kernel_size=3, 
                                     input_shape=input_shape, 
-                                    use_bias=use_bias, 
-                                    k=k_cnn,
-                                    name="conv_in", 
+                                    # use_bias=use_bias, 
                                     dynamic_scaling=dynamic_scaling_cnn, 
-                                    masking_method=masking_method)
+                                    masking_method=masking_method,
+                                    k=k_cnn,
+                                    name="conv_in") 
 
         conv_in_out_shape = self.conv_in.out_shape
 
@@ -327,12 +327,12 @@ class Conv2_Mask(tf.keras.Model):
         self.conv_second = MaskedConv2D(filters=int(64*width_multiplier), 
                                         kernel_size=3, 
                                         input_shape = conv_in_out_shape, 
-                                        use_bias=use_bias, k=k_cnn,
-                                        name="conv_second", 
+                                        # use_bias=use_bias, 
                                         dynamic_scaling=dynamic_scaling_cnn, 
-                                        masking_method=masking_method)
+                                        masking_method=masking_method,
+                                        k=k_cnn,
+                                        name="conv_second") 
 
-        conv_in_out_shape = self.conv_in.out_shape
         conv_second_out_shape = self.conv_second.out_shape
         
         self.pooling = MaxPool2DExt(input_shape = conv_second_out_shape, 
@@ -344,28 +344,27 @@ class Conv2_Mask(tf.keras.Model):
         
         self.linear_first = MaskedDense(input_dim=int(tf.math.reduce_prod(pooling_out_shape[1:]).numpy()),
                                         units=int(256*width_multiplier), 
-                                        use_bias=use_bias, 
+                                        # use_bias=use_bias, 
                                         dynamic_scaling=dynamic_scaling_dense, 
-                                        k=k_dense,
                                         masking_method=masking_method, 
+                                        k=k_dense,
                                         name="linear_first")
 
-        conv_in_out_shape = self.conv_in.out_shape
         self.linear_second = MaskedDense(input_dim=int(256*width_multiplier),
                                          units=int(256*width_multiplier), 
-                                         use_bias=use_bias, 
+                                        #  use_bias=use_bias, 
                                          dynamic_scaling=dynamic_scaling_dense, 
                                          masking_method=masking_method, 
-                                         name="linear_second", 
-                                         k=k_dense)
+                                         k=k_dense,
+                                         name="linear_second") 
 
         self.linear_out = MaskedDense(input_dim=int(256*width_multiplier),
                                       units=10, 
-                                      use_bias=use_bias, 
+                                    #   use_bias=use_bias, 
                                       dynamic_scaling=dynamic_scaling_dense, 
                                       masking_method=masking_method, 
-                                      name="linear_out", 
-                                      k=k_dense)
+                                      k=k_dense,
+                                      name="linear_out") 
 
         self.alpha = 1.0 
 
@@ -448,7 +447,7 @@ class Conv4_Mask(tf.keras.Model):
                 #  dropout_rate=0.2, 
                  width_multiplier=1, 
                  #use_bias=False, 
-                 masking_method="variable"):
+                 masking_method="fixed"):
         
         super(Conv4_Mask, self).__init__()
 
@@ -633,7 +632,7 @@ class Conv6_Mask(tf.keras.Model):
                 #  dropout_rate=0.2, 
                  width_multiplier=1, 
                 #  use_bias=False, 
-                 masking_method="variable"):
+                 masking_method="fixed"):
         
         super(Conv6_Mask, self).__init__()
 
@@ -853,7 +852,7 @@ class Conv8_Mask(tf.keras.Model):
                 #  dropout_rate=0.2, 
                  width_multiplier=1, 
                 #  use_bias=False, 
-                 masking_method="variable"):
+                 masking_method="fixed"):
         
         super(Conv8_Mask, self).__init__()
 

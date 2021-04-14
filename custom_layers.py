@@ -123,7 +123,7 @@ class MaskedDense(layers.Layer):
         self.tanh_th = tanh_th
 
         self.masking_method = masking_method
-        self.masking = self.tanh_mask if masking_method is "variable" else self.tanh_score_mask
+        self.masking = self.signed_supermask if masking_method is "variable" else self.signed_supermask_score
 
 
     def update_tanh_th(self, percentage=0.75):
@@ -143,16 +143,35 @@ class MaskedDense(layers.Layer):
         self.trainable_weights.append(self.mask) 
     
     def get_mask(self, as_logit=False):
+        """ONLY USED WITH BINARY MASKING - NOT IN USE FOR SIGNED SUPERMASKS
+        Returns the (logit) mask of the layer
+
+        Args:
+            as_logit (bool, optional): True if return mask values as "logit" i.e. the real valued mask values. Defaults to False.
+
+        Returns:
+            tf.Variable: mask 
+        """
         if as_logit is True:
             return self.mask
         else:
             return tf.math.sigmoid(self.mask)
     
     def get_bernoulli_mask(self):
+        """Returns the effective mask
+
+        Returns:
+            tf.Variable: effective mask
+        """
         return self.bernoulli_mask  
         
     
-    def sigmoid_mask(self):
+    def binary_supermask(self):
+        """Generates a binary Supermask out of self.mask
+
+        Returns:
+            tf.Variable: effective binary Supermask. Note the straight through estimtator trick
+        """
         sigmoid_mask = self.mask_activation()
 
         bernoulli_sample = tf.random.uniform(shape = self.shape, minval=0., maxval=1.)
@@ -163,10 +182,21 @@ class MaskedDense(layers.Layer):
         return effective_mask + sigmoid_mask - tf.stop_gradient(sigmoid_mask) 
     
     def mask_activation(self):
+        """Returns the real valued Supermask. In case you want to use some activation function for the mask, this function
+        provides some flexibility to that.
+
+        Returns:
+            tf.Variable: real-valued mask
+        """
         return self.mask
         
         
-    def tanh_mask(self):
+    def signed_supermask(self):
+        """Calculates the signed Supermask (fixed threshold) with a simple step function
+
+        Returns:
+            tf.Variable: effective signed Supermask. Note the trick necessary to get the straight through estimator
+        """
         
         tanh_mask = self.mask 
 
@@ -177,8 +207,13 @@ class MaskedDense(layers.Layer):
         
         return  tf.stop_gradient(effective_mask) + tanh_mask - tf.stop_gradient(tanh_mask) 
     
-    def tanh_score_mask(self):
-        
+    def signed_supermask_score(self):
+        """Calculates the signed Supermask (variable threshold, i.e. in the fashion of Ramarunjan et al).
+        Not further investigated in the paper. 
+
+        Returns:
+            tf.Variable: effective signed Supermask with variable threshold. 
+        """
         tanh_mask = self.mask_activation() 
 
         first_k = min(5000, self.size)
@@ -198,6 +233,11 @@ class MaskedDense(layers.Layer):
         return tf.stop_gradient(effective_mask) + tanh_mask - tf.stop_gradient(tanh_mask) 
     
     def score_mask(self):
+        """Calculates the binary Supermask in the fashion of Ramarunjan et al - not used
+
+        Returns:
+            tf.Variable: effective binary score Supermask
+        """
         sigmoid_mask = tf.math.sigmoid(self.mask)
 
         threshold = tf.math.reduce_min(tf.math.top_k(tf.reshape(sigmoid_mask,[-1]), self.k_idx, sorted=False).values)
@@ -209,37 +249,62 @@ class MaskedDense(layers.Layer):
         return tf.stop_gradient(effective_mask) + self.mask - tf.stop_gradient(self.mask) 
     
     def get_normal_weights(self):
+        """Returns the weights of the layer"""
+
         return self.w
     
     def set_normal_weights(self, w):
-        
+        """Sets the weights of the layer"""
         self.w = tf.Variable(w.astype("float32"), trainable=False, name="w")
     
-    def reset_mask(self):
-        self.mask = tf.Variable(np.ones((self.input_dim,self.units), dtype="float32"))
+    # def reset_mask(self):
+    #     self.mask = tf.Variable(np.ones((self.input_dim,self.units), dtype="float32"))
         
-    def get_all_weights(self):
-        return self.w
+    # def get_all_weights(self):
+    #     return self.w
     
     def get_pruned_weights(self):
+        """Returns those weight elements that are masked (only used with binary Supermask)
+
+        Returns:
+            tf.Variable: reverse-masked weights
+        """
         flipped_mask = tf.cast(tf.not_equal(self.bernoulli_mask, 1), tf.float32)
         return tf.multiply(self.w, flipped_mask)
     
     def get_masked_weights(self):
+        """Get effective weight matrix
+
+        Returns:
+            tf.Variable: effective weight matrix
+        """
         return tf.multiply(self.w, self.bernoulli_mask)
     
     def get_nonzero_weights(self):
+        """Returns those weights that are not affected by pruning (only used with binary Supermask)
+
+        Returns:
+            tf.Variable: weights not affected by pruning
+        """
         weights_masked = tf.boolean_mask(self.w, self.bernoulli_mask) 
         return weights_masked 
     
     @tf.function
     def call(self, inputs):
+        """Expands the call function of a normal layer by applying the (signed) Supermask before calculating the output
+
+        Args:
+            inputs (tf.Variable): input to the layer
+
+        Returns:
+            tf.Variable: output of the layer
+        """
         inputs = tf.cast(inputs, tf.float32)
         
-        if self.masking_method == "variable":
-            sig_mask = self.tanh_mask() 
+        if self.masking_method == "fixed":
+            sig_mask = self.signed_supermask() 
         else:
-            sig_mask = self.tanh_score_mask()
+            sig_mask = self.signed_supermask_score()
         weights_masked = tf.multiply(self.w, sig_mask)
          
         # if self.dynamic_scaling is True:
@@ -308,19 +373,34 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         self.tanh_th = tanh_th
         
         self.masking_method = masking_method
-        self.masking = self.tanh_mask if masking_method is "variable" else self.tanh_score_mask
+        self.masking = self.signed_supermask if masking_method is "variable" else self.signed_supermask_score
 
 
     def update_tanh_th(self, percentage=0.75):
+        """Updates the threshold for the mask step function. In case of a fixed threshold masking, this function is not used
+
+        Args:
+            percentage (float, optional): percentage value of maximum weight. Defaults to 0.75.
+        """
         tanh_mask = self.mask_activation()
         mask_max = tf.math.reduce_max(tf.math.abs(tanh_mask))
         
         self.tanh_th = mask_max * percentage
 
     def get_output_shape(self):
+        """Returns the output shape of the layer
+
+        Returns:
+            [Tuple]: output shape of the layer
+        """
         return self.out_shape 
 
     def set_mask(self,mask):
+        """Setter for the mask
+
+        Args:
+            mask (np.ndarray): mask values as array
+        """
         self.mask = tf.Variable(tf.cast(mask, "float32"), name="mask")
         
     def get_mask(self, as_logit=False):
@@ -342,26 +422,46 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         self.w = tf.constant(wb[0].astype("float32"))
         self.b = tf.constant(wb[1].astype("float32"))
     
-    def reset_mask(self):
-        self.mask = tf.Variable(np.ones((self.input_dim,self.units), dtype="float32"))
+    # def reset_mask(self):
+    #     self.mask = tf.Variable(np.ones((self.input_dim,self.units), dtype="float32"))
     
-    def get_bias(self):
-        return self.b
+    # def get_bias(self):
+    #     return self.b
         
     def get_pruned_weights(self):
+        """Returns those weight elements that are masked (only used with binary Supermask)
+
+        Returns:
+            tf.Variable: reverse-masked weights
+        """
         flipped_mask = tf.cast(tf.not_equal(self.bernoulli_mask, 1), tf.float32)
         return tf.multiply(self.w, flipped_mask)
     
     def get_masked_weights(self):
+        """Get effective weight matrix
+
+        Returns:
+            tf.Variable: effective weight matrix
+        """
         return tf.multiply(self.w, self.bernoulli_mask)
     
     def get_nonzero_weights(self):
+        """Returns those weights that are not affected by pruning (only used with binary Supermask)
+
+        Returns:
+            tf.Variable: weights not affected by pruning
+        """
         weights_masked = tf.boolean_mask(self.w, self.bernoulli_mask) 
         return weights_masked 
 
 
     def build(self, input_shape):
+        """Somehow the for-loop below is necessary in order to set the trainable and non-trainable weights of a keras
+        Conv layer properly
 
+        Args:
+            input_shape (Tuple): input shape to layer
+        """
         super(MaskedConv2D, self).build(input_shape)
 
         for i,var in enumerate( self._trainable_weights ):
@@ -369,7 +469,12 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
                 del self._trainable_weights[i]
                 del var
 
-    def sigmoid_mask(self):
+    def binary_supermask(self):
+        """Generates a binary Supermask out of self.mask
+
+        Returns:
+            tf.Variable: effective binary Supermask. Note the straight through estimtator trick
+        """
         sigmoid_mask = self.mask_activation() 
 
         bernoulli_sample = tf.random.uniform(shape = self.weight_shape, minval=0., maxval=1.)
@@ -380,9 +485,20 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         return effective_mask + sigmoid_mask - tf.stop_gradient(sigmoid_mask) 
 
     def mask_activation(self):
+        """Returns the real valued Supermask. In case you want to use some activation function for the mask, this function
+        provides some flexibility to that.
+
+        Returns:
+            tf.Variable: real-valued mask
+        """
         return self.mask
 
-    def tanh_mask(self):
+    def signed_supermask(self):
+        """Calculates the signed Supermask (fixed threshold) with a simple step function
+
+        Returns:
+            tf.Variable: effective signed Supermask. Note the trick necessary to get the straight through estimator
+        """
         
         tanh_mask = self.mask
 
@@ -393,7 +509,13 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         
         return  tf.stop_gradient(effective_mask) + tanh_mask - tf.stop_gradient(tanh_mask)
     
-    def tanh_score_mask(self):
+    def signed_supermask_score(self):
+        """Calculates the signed Supermask (variable threshold, i.e. in the fashion of Ramarunjan et al).
+        Not further investigated in the paper. 
+
+        Returns:
+            tf.Variable: effective signed Supermask with variable threshold. 
+        """
         
         tanh_mask = self.mask_activation() 
 
@@ -427,10 +549,10 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
 
         inputs = tf.cast(inputs, tf.float32)
 
-        if self.masking_method == "variable":
-            sig_mask = self.tanh_mask()
+        if self.masking_method == "fixed":
+            sig_mask = self.signed_supermask()
         else:
-            sig_mask = self.tanh_score_mask()
+            sig_mask = self.signed_supermask_score()
         
         weights_masked = tf.multiply(self.w, sig_mask)
 

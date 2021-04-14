@@ -60,7 +60,7 @@ class FCN(tf.keras.Model):
 
 class FCN_Mask(tf.keras.Model):
     
-    def __init__(self, sigmoid_multiplier=[0.2,0.2,0.2], use_bernoulli_sampler=False, dynamic_scaling=True, k=0.5, masking_method="variable"):
+    def __init__(self, sigmoid_multiplier=[0.2,0.2,0.2], use_bernoulli_sampler=False, dynamic_scaling=True, k=0.5, masking_method="fixed"):
         super(FCN_Mask,self).__init__()
                 
         self.linear_in = MaskedDense(input_dim=784, units=300, sigmoid_multiplier=sigmoid_multiplier[0], dynamic_scaling=dynamic_scaling, k=k, masking_method=masking_method)
