@@ -348,6 +348,7 @@ class Conv2_Mask(tf.keras.Model):
                  input_shape, 
                  dynamic_scaling_cnn=True, 
                  dynamic_scaling_dense=True, 
+                 tanh_th=0.5,
                  k_cnn=0.4, 
                  k_dense=0.3, 
                  width_multiplier=1, 
@@ -361,6 +362,7 @@ class Conv2_Mask(tf.keras.Model):
                                     input_shape=input_shape, 
                                     dynamic_scaling=dynamic_scaling_cnn, 
                                     masking_method=masking_method,
+                                    tanh_th=tanh_th,
                                     k=k_cnn,
                                     name="conv_in") 
 
@@ -372,6 +374,7 @@ class Conv2_Mask(tf.keras.Model):
                                         input_shape = conv_in_out_shape, 
                                         dynamic_scaling=dynamic_scaling_cnn, 
                                         masking_method=masking_method,
+                                        tanh_th=tanh_th,
                                         k=k_cnn,
                                         name="conv_second") 
 
@@ -390,6 +393,7 @@ class Conv2_Mask(tf.keras.Model):
                                         dynamic_scaling=dynamic_scaling_dense, 
                                         masking_method=masking_method, 
                                         k=k_dense,
+                                        tanh_th=tanh_th,
                                         name="linear_first")
 
         self.linear_second = MaskedDense(input_dim=int(256*width_multiplier),
@@ -397,6 +401,7 @@ class Conv2_Mask(tf.keras.Model):
                                          dynamic_scaling=dynamic_scaling_dense, 
                                          masking_method=masking_method, 
                                          k=k_dense,
+                                         tanh_th=tanh_th,
                                          name="linear_second") 
 
         self.linear_out = MaskedDense(input_dim=int(256*width_multiplier),
@@ -404,6 +409,7 @@ class Conv2_Mask(tf.keras.Model):
                                       dynamic_scaling=dynamic_scaling_dense, 
                                       masking_method=masking_method, 
                                       k=k_dense,
+                                      tanh_th=tanh_th,
                                       name="linear_out") 
 
         self.alpha = 1.0 
@@ -479,7 +485,8 @@ class Conv4_Mask(tf.keras.Model):
 
     def __init__(self, 
                  input_shape, 
-                 dynamic_scaling_cnn=True, 
+                 dynamic_scaling_cnn=True,
+                 tanh_th=0.5, 
                  k_cnn=0.4, 
                  k_dense=0.3,
                  dynamic_scaling_dense=True, 
@@ -492,6 +499,7 @@ class Conv4_Mask(tf.keras.Model):
                                     kernel_size=3, 
                                     input_shape=input_shape, 
                                     k=k_cnn, 
+                                    tanh_th=tanh_th,
                                     dynamic_scaling=dynamic_scaling_cnn,
                                     masking_method=masking_method, 
                                     name="conv_in")
@@ -503,6 +511,7 @@ class Conv4_Mask(tf.keras.Model):
                                         kernel_size=3, 
                                         input_shape = conv_in_out_shape, 
                                         k=k_cnn,
+                                        tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method, 
                                         name="conv_second")
@@ -519,6 +528,7 @@ class Conv4_Mask(tf.keras.Model):
                                        kernel_size=3, 
                                        input_shape = pooling_first_out_shape, 
                                        k=k_cnn,
+                                       tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method, 
                                        name="conv_third")
@@ -529,6 +539,7 @@ class Conv4_Mask(tf.keras.Model):
                                         kernel_size=3, 
                                         input_shape = conv_third_out_shape, 
                                         k=k_cnn,
+                                        tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method, 
                                         name="conv_fourth")
@@ -546,6 +557,7 @@ class Conv4_Mask(tf.keras.Model):
                                         units=int(256*width_multiplier), 
                                         masking_method=masking_method,
                                         k=k_dense, 
+                                        tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_dense, 
                                         name="linear_first")
 
@@ -553,6 +565,7 @@ class Conv4_Mask(tf.keras.Model):
                                          units=int(256*width_multiplier), 
                                          masking_method=masking_method, 
                                          k=k_dense, 
+                                         tanh_th=tanh_th,
                                          dynamic_scaling=dynamic_scaling_dense, 
                                          name="linear_second")
 
@@ -560,6 +573,7 @@ class Conv4_Mask(tf.keras.Model):
                                       units=10, 
                                       masking_method=masking_method, 
                                       k=k_dense, 
+                                      tanh_th=tanh_th,
                                       dynamic_scaling=dynamic_scaling_dense,
                                       name="linear_out") 
         
@@ -653,6 +667,7 @@ class Conv6_Mask(tf.keras.Model):
     def __init__(self, 
                  input_shape,
                  dynamic_scaling_cnn=True, 
+                 tanh_th=0.5,
                  k_cnn=0.4, 
                  k_dense=0.3,
                  dynamic_scaling_dense=True, 
@@ -665,6 +680,7 @@ class Conv6_Mask(tf.keras.Model):
                                     kernel_size=3, 
                                     input_shape=input_shape, 
                                     k=k_cnn, 
+                                    tanh_th=tanh_th,
                                     dynamic_scaling=dynamic_scaling_cnn,
                                     masking_method=masking_method, 
                                     name="conv_in")
@@ -676,6 +692,7 @@ class Conv6_Mask(tf.keras.Model):
                                         kernel_size=3, 
                                         input_shape = conv_in_out_shape, 
                                         k=k_cnn,
+                                        tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method, 
                                         name="conv_second")
@@ -692,6 +709,7 @@ class Conv6_Mask(tf.keras.Model):
                                        kernel_size=3, 
                                        input_shape = pooling_first_out_shape, 
                                        k=k_cnn,
+                                       tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method, 
                                        name="conv_third")
@@ -702,6 +720,7 @@ class Conv6_Mask(tf.keras.Model):
                                         kernel_size=3, 
                                         input_shape = conv_third_out_shape, 
                                         k=k_cnn,
+                                        tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method, 
                                         name="conv_fourth")
@@ -717,6 +736,7 @@ class Conv6_Mask(tf.keras.Model):
                                        kernel_size=3, 
                                        input_shape=pooling_second_out_shape, 
                                        k=k_cnn,
+                                       tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method, 
                                        name="conv_fifth")
@@ -727,6 +747,7 @@ class Conv6_Mask(tf.keras.Model):
                                        kernel_size=3, 
                                        input_shape=conv_fifth_out_shape, 
                                        k=k_cnn,
+                                       tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method, 
                                        name="conv_sixth")
@@ -745,6 +766,7 @@ class Conv6_Mask(tf.keras.Model):
                                         units=int(256*width_multiplier), 
                                         masking_method=masking_method, 
                                         k=k_dense, 
+                                        tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_dense,
                                         name="linear_first") 
         
@@ -752,6 +774,7 @@ class Conv6_Mask(tf.keras.Model):
                                          units=int(256*width_multiplier), 
                                          masking_method=masking_method, 
                                          k=k_dense, 
+                                         tanh_th=tanh_th,
                                          dynamic_scaling=dynamic_scaling_dense,
                                          name="linear_second") 
         
@@ -759,6 +782,7 @@ class Conv6_Mask(tf.keras.Model):
                                       units=10,
                                       masking_method=masking_method, 
                                       k=k_dense, 
+                                      tanh_th=tanh_th,
                                       dynamic_scaling=dynamic_scaling_dense,
                                       name="linear_out") 
 
@@ -861,6 +885,7 @@ class Conv8_Mask(tf.keras.Model):
     def __init__(self, 
                  input_shape,
                  dynamic_scaling_cnn=True, 
+                 tanh_th=0.5,
                  k_cnn=0.4, 
                  k_dense=0.3,
                  dynamic_scaling_dense=True, 
@@ -874,6 +899,7 @@ class Conv8_Mask(tf.keras.Model):
                                     kernel_size=3, 
                                     input_shape=input_shape, 
                                     k=k_cnn, 
+                                    tanh_th=tanh_th,
                                     dynamic_scaling=dynamic_scaling_cnn,
                                     masking_method=masking_method, 
                                     name="conv_in")
@@ -883,6 +909,7 @@ class Conv8_Mask(tf.keras.Model):
                                         kernel_size=3, 
                                         input_shape = conv_in_out_shape, 
                                         k=k_cnn,
+                                        tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method, 
                                         name="conv_second")
@@ -897,6 +924,7 @@ class Conv8_Mask(tf.keras.Model):
                                        kernel_size=3, 
                                        input_shape = pooling_first_out_shape, 
                                        k=k_cnn,
+                                       tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method, 
                                        name="conv_third")
@@ -906,6 +934,7 @@ class Conv8_Mask(tf.keras.Model):
                                         kernel_size=3, 
                                         input_shape = conv_third_out_shape, 
                                         k=k_cnn,
+                                        tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method, 
                                         name="conv_fourth")
@@ -922,6 +951,7 @@ class Conv8_Mask(tf.keras.Model):
                                        kernel_size=3, 
                                        input_shape=pooling_second_out_shape, 
                                        k=k_cnn,
+                                       tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method, 
                                        name="conv_fifth")
@@ -932,6 +962,7 @@ class Conv8_Mask(tf.keras.Model):
                                        kernel_size=3, 
                                        input_shape=conv_fifth_out_shape, 
                                        k=k_cnn,
+                                       tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn, 
                                        masking_method=masking_method, 
                                        name="conv_sixth")
@@ -948,6 +979,7 @@ class Conv8_Mask(tf.keras.Model):
                                          kernel_size=3, 
                                          input_shape=pooling_third_out_shape, 
                                          k=k_cnn,
+                                         tanh_th=tanh_th,
                                          dynamic_scaling=dynamic_scaling_cnn,
                                          masking_method=masking_method, 
                                          name="conv_seventh")
@@ -958,6 +990,7 @@ class Conv8_Mask(tf.keras.Model):
                                         kernel_size=3, 
                                         input_shape=conv_seventh_out_shape, 
                                         k=k_cnn,
+                                        tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method, 
                                         name="conv_eighth")
@@ -976,6 +1009,7 @@ class Conv8_Mask(tf.keras.Model):
                                         units=256, 
                                         masking_method=masking_method, 
                                         k=k_dense, 
+                                        tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_dense,
                                         name="linear_first") 
 
@@ -983,6 +1017,7 @@ class Conv8_Mask(tf.keras.Model):
                                          units=256, 
                                          masking_method=masking_method, 
                                          k=k_dense, 
+                                         tanh_th=tanh_th,
                                          dynamic_scaling=dynamic_scaling_dense,
                                          name="linear_second") 
 
@@ -990,6 +1025,7 @@ class Conv8_Mask(tf.keras.Model):
                                       units=10, 
                                       masking_method=masking_method, 
                                       k=k_dense, 
+                                      tanh_th=tanh_th,
                                       dynamic_scaling=dynamic_scaling_dense,
                                       name="linear_out") 
 

@@ -1,12 +1,10 @@
 
 import tensorflow as tf
-import functools
 #import tensorflow_probability as tfp
 from tensorflow.keras import layers
-import numpy as np
 
-from custom_layers import Conv2DExt, DenseExt, MaxPool2DExt, FlattenExt, BatchNormExt 
-from custom_layers import MaskedDense, MaskedConv2D
+from custom_layers import DenseExt 
+from custom_layers import MaskedDense
 
 
 class FCN(tf.keras.Model):
@@ -37,9 +35,11 @@ class FCN(tf.keras.Model):
         x = self.linear_in(inputs)
         x = self.activation(x)
         layerwise_output.append(x)
+        
         x = self.linear_h1(x)
         x = self.activation(x) 
         layerwise_output.append(x)
+        
         x = self.linear_out(x)
         x = tf.nn.softmax(x)
         layerwise_output.append(x)
@@ -65,6 +65,7 @@ class FCN_Mask(tf.keras.Model):
     
     def __init__(self, 
                  dynamic_scaling=False, 
+                 tanh_th=.5,
                  k=0.5, 
                  masking_method="fixed"):
 
@@ -74,18 +75,21 @@ class FCN_Mask(tf.keras.Model):
                                      units=300, 
                                      dynamic_scaling=dynamic_scaling, 
                                      k=k, 
+                                     tanh_th=tanh_th,
                                      masking_method=masking_method)
         
         self.linear_h1 = MaskedDense(input_dim=300, 
                                      units=100, 
                                      dynamic_scaling=dynamic_scaling, 
                                      k=k, 
+                                     tanh_th=tanh_th,
                                      masking_method=masking_method)
         
         self.linear_out = MaskedDense(input_dim=100, 
                                       units=10, 
                                       dynamic_scaling=dynamic_scaling, 
                                       k=k, 
+                                      tanh_th=tanh_th,
                                       masking_method=masking_method)
     
 

@@ -89,7 +89,7 @@ class ModelTrainer():
         
         self.final_masks = []
         
-    @tf.function
+    #@tf.function
     def train_step(self, x_batch, y_batch):
         """Single train step
 
@@ -107,6 +107,8 @@ class ModelTrainer():
             
             gradients = tape.gradient(loss, self.model.trainable_variables)
 
+            # print(gradients)
+
         #gradients = [tf.clip_by_norm(g, .5) for g in gradients]
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
 
@@ -117,7 +119,7 @@ class ModelTrainer():
         Calculates the ratio of remaining weights
         """
         
-        global_no_ones = np.sum([np.sum(np.abs(layer.tanh_mask())) for layer in self.model.layers 
+        global_no_ones = np.sum([np.sum(np.abs(layer.signed_supermask())) for layer in self.model.layers 
                                  if layer.type == "fefo" or layer.type == "conv"])
         
         global_size = np.sum([tf.size(layer.mask) for layer in self.model.layers 

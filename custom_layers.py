@@ -135,11 +135,13 @@ class MaskedDense(layers.Layer):
         self.tanh_th = tanh_th
 
         self.masking_method = masking_method
-        self.masking = self.signed_supermask if masking_method is "variable" else self.signed_supermask_score
+        self.masking = self.signed_supermask if masking_method is "fixed" else self.signed_supermask_score
+
+        # print("Masking Method: ", self.masking_method)
 
 
     def update_tanh_th(self, percentage=0.75):
-        """Updates the threshold for the mask step function. In case of a fixed threshold masking, this function is not used
+        """Updates the threshold for the mask step function. In case of a fixed threshold masking, this function is not used during training
 
         Args:
             percentage (float, optional): percentage value of maximum weight. Defaults to 0.75.
@@ -228,7 +230,9 @@ class MaskedDense(layers.Layer):
         effective_mask = tf.where(tanh_mask > self.tanh_th, 1., effective_mask)
         
         self.bernoulli_mask = effective_mask
-        
+
+        #print(self.tanh_th)
+
         return  tf.stop_gradient(effective_mask) + tanh_mask - tf.stop_gradient(tanh_mask) 
     
     def signed_supermask_score(self):
@@ -238,6 +242,7 @@ class MaskedDense(layers.Layer):
         Returns:
             tf.Variable: effective signed Supermask with variable threshold. 
         """
+        
         tanh_mask = self.mask_activation() 
 
         first_k = min(5000, self.size)
@@ -310,7 +315,7 @@ class MaskedDense(layers.Layer):
         weights_masked = tf.boolean_mask(self.w, self.bernoulli_mask) 
         return weights_masked 
     
-    @tf.function
+    # @tf.function
     def call(self, inputs):
         """Extends the call function of a normal layer by applying the (signed) Supermask before calculating the output
 
@@ -327,7 +332,6 @@ class MaskedDense(layers.Layer):
         else:
             sig_mask = self.signed_supermask_score()
         weights_masked = tf.multiply(self.w, sig_mask)
-         
         # if self.dynamic_scaling is True:
             # self.no_ones = tf.reduce_sum(weights_masked)
             # self.multiplier =  tf.math.divide(tf.size(sig_mask, out_type=tf.float32), self.no_ones) #* (1./self.sigmoid_multiplier)
@@ -392,7 +396,7 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         self.tanh_th = tanh_th
         
         self.masking_method = masking_method
-        self.masking = self.signed_supermask if masking_method is "variable" else self.signed_supermask_score
+        self.masking = self.signed_supermask if masking_method is "fixed" else self.signed_supermask_score
 
 
     def update_tanh_th(self, percentage=0.75):

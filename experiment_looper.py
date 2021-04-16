@@ -15,7 +15,7 @@ from weight_initializer import initializer
 from data_preprocessor import data_handler
 
 from conv_networks import Conv2, Conv4, Conv6, Conv8
-from conv_networks import Conv2_Mask, Conv4_Mask, Conv6_Mask, Conv8_Mask, VGG16_Mask, VGG19_Mask
+from conv_networks import Conv2_Mask, Conv4_Mask, Conv6_Mask, Conv8_Mask #, VGG16_Mask, VGG19_Mask
 
 from dense_networks import FCN, FCN_Mask
 
@@ -79,79 +79,74 @@ def network_builder(config: dict) -> tf.keras.Model:
     else:
         if config["model"]["type"] == "FCN":
             model = FCN_Mask(masking_method=config["model"]["masking_method"],
-                            #  tanh_th=config["model"]["tanh_th"],
+                             tanh_th=config["model"]["tanh_th"],
                              k=config["model"]["k_dense"],
                              dynamic_scaling=config["model"]["dynamic_scaling_dense"])
         elif config["model"]["type"] == "Conv2":
             model = Conv2_Mask(input_shape=input_shape,
                                 masking_method=config["model"]["masking_method"],
-                                # tanh_th=config["model"]["tanh_th"],
+                                tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
                                 dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
                                 width_multiplier=config["model"]["width_multiplier"])
-                                # use_dropout=config["model"]["use_dropout"])
         elif config["model"]["type"] == "Conv4":
             model = Conv4_Mask(input_shape=input_shape,
                                 masking_method=config["model"]["masking_method"],
-                                # tanh_th=config["model"]["tanh_th"],
+                                tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
                                 dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
                                 width_multiplier=config["model"]["width_multiplier"])
-                                #use_dropout=config["model"]["use_dropout"])
 
         elif config["model"]["type"] == "Conv6":
             model = Conv6_Mask(input_shape=input_shape,
                                 masking_method=config["model"]["masking_method"],
-                                # tanh_th=config["model"]["tanh_th"],
+                                tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
                                 dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
                                 width_multiplier=config["model"]["width_multiplier"])
-                                #use_dropout=config["model"]["use_dropout"])
 
         elif config["model"]["type"] == "Conv8":
             model = Conv8_Mask(input_shape=input_shape,
                                 masking_method=config["model"]["masking_method"],
-                                # tanh_th=config["model"]["tanh_th"],
+                                tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
                                 dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
                                 width_multiplier=config["model"]["width_multiplier"])
-                                #use_dropout=config["model"]["use_dropout"])
 
-        elif config["model"]["type"] == "VGG16":
-            model = VGG16_Mask(input_shape=input_shape,
-                                masking_method=config["model"]["masking_method"],
-                                # tanh_th=config["model"]["tanh_th"],
-                                k_cnn=config["model"]["k_cnn"],
-                                k_dense=config["model"]["k_dense"],
-                                dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
-                                dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
-                                width_multiplier=config["model"]["width_multiplier"])
-                                #use_dropout=config["model"]["use_dropout"])
+        # elif config["model"]["type"] == "VGG16":
+        #     model = VGG16_Mask(input_shape=input_shape,
+        #                         masking_method=config["model"]["masking_method"],
+        #                         tanh_th=config["model"]["tanh_th"],
+        #                         k_cnn=config["model"]["k_cnn"],
+        #                         k_dense=config["model"]["k_dense"],
+        #                         dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
+        #                         dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
+        #                         width_multiplier=config["model"]["width_multiplier"])
 
-        elif config["model"]["type"] == "VGG19":
-            model = VGG19_Mask(input_shape=input_shape,
-                                masking_method=config["model"]["masking_method"],
-                                # tanh_th=config["model"]["tanh_th"],
-                                k_cnn=config["model"]["k_cnn"],
-                                k_dense=config["model"]["k_dense"],
-                                dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
-                                dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
-                                width_multiplier=config["model"]["width_multiplier"])
-                                #use_dropout=config["model"]["use_dropout"])
+        # elif config["model"]["type"] == "VGG19":
+        #     model = VGG19_Mask(input_shape=input_shape,
+        #                         masking_method=config["model"]["masking_method"],
+        #                         tanh_th=config["model"]["tanh_th"],
+        #                         k_cnn=config["model"]["k_cnn"],
+        #                         k_dense=config["model"]["k_dense"],
+        #                         dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
+        #                         dynamic_scaling_dense=config["model"]["dynamic_scaling_dense"],
+        #                         width_multiplier=config["model"]["width_multiplier"])
 
         else:
             print("Please define a model")
             return 0
  
-        if config["model"]["masking_method"] is "variable":
+        if config["model"]["masking_method"] == "fixed":
+            print("Fixed Threshold...updating tanh_th")
             for layer in model.layers:
                 if layer.type == "fefo" or layer.type == "conv":
                     layer.update_tanh_th(percentage=config["model"]["tanh_th"])
@@ -184,6 +179,12 @@ def initialize_model(model:tf.keras.Model,
         model = init.set_loaded_weights(model = model, 
                                         path = config["path_masks"]+mask_file_name)
     
+        if config["model"]["masking_method"] == "fixed":
+            print("Fixed Threshold...updating tanh_th")
+            for layer in model.layers:
+                if layer.type == "fefo" or layer.type == "conv":
+                    layer.update_tanh_th(percentage=config["model"]["tanh_th"])
+
     return model     
 
 def repeat_experiment(config:dict) -> list:
