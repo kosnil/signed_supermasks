@@ -12,6 +12,9 @@ tf.random.set_seed(seed)
 
 
 class MaxPool2DExt(tf.keras.layers.MaxPool2D):
+    """Extends tf.keras.MaxPool2D class with a type variable which is used in the initialization phase.
+    Furthermore, we add a variable which contains the output shape of the layer.
+    """
     def __init__(self, 
                  input_shape=None, 
                  pool_size=(2,2), 
@@ -42,15 +45,20 @@ class MaxPool2DExt(tf.keras.layers.MaxPool2D):
                 self.out_shape = (input_shape[0], new_rows, new_cols, input_shape[-1])
 
 class BatchNormExt(tf.keras.layers.BatchNormalization):
+    """Extends tf.keras.BatchNormalization class with a type variable which is used in the initialization phase
+    Not utilized
+    """
     def __init__(self, trainable):
         super(BatchNormExt, self).__init__(trainable=trainable)
         self.type="batchnorm"
 class FlattenExt(tf.keras.layers.Flatten):
+    """Extends tf.keras.Flatten class with a type variable which is used in the initialization phase"""
     def __init__(self):
         super(FlattenExt, self).__init__()
         self.type = "flat"
 
 class Conv2DExt(tf.keras.layers.Conv2D):
+    """Extends tf.keras.Conv2D class with a type variable which is used in the initialization phase"""
     def __init__(self, 
                  filters, 
                  kernel_size, 
@@ -67,17 +75,21 @@ class Conv2DExt(tf.keras.layers.Conv2D):
         self.type = "conv_normal"
 
 class GlobalAveragePooling2DExt(tf.keras.layers.GlobalAveragePooling2D):
+    """Extends tf.keras GlobalAveragePooling2D class with a type variable which is used in the initialization phase"""
     def __init__(self):
         super(GlobalAveragePooling2DExt, self).__init__()
         self.type = "globalavgpooling"
 
 class DenseExt(tf.keras.layers.Dense):
+    """Extends tf.keras.Dense class with a type variable which is used in the initialization phase"""
     def __init__(self, units, use_bias=True):
         super(DenseExt, self).__init__(units, use_bias=use_bias)
         self.type = "fefo_normal"
 
 class MaskedDense(layers.Layer):
-    
+    """Extends the Dense Layer of tf.keras with masking functionality
+    """
+
     def __init__(self,
                  input_dim: int,
                  units: int, 
@@ -85,8 +97,8 @@ class MaskedDense(layers.Layer):
                  name=None, 
                  dynamic_scaling=True, 
                  k=0.5, 
-                 tanh_th=0.01): #, 
-                #  use_bias=False):
+                 tanh_th=0.01):  
+
         super(MaskedDense,self).__init__()
 
         self.out_shape = (None, units)
@@ -127,18 +139,30 @@ class MaskedDense(layers.Layer):
 
 
     def update_tanh_th(self, percentage=0.75):
+        """Updates the threshold for the mask step function. In case of a fixed threshold masking, this function is not used
+
+        Args:
+            percentage (float, optional): percentage value of maximum weight. Defaults to 0.75.
+        """
         tanh_mask = self.mask_activation() 
         mask_max = tf.math.reduce_max(tf.math.abs(tanh_mask))
         
         self.tanh_th = mask_max * percentage
     
-    def set_mask_rand(self):
-        self.mask = tf.constant(np.random.randint(2, size=(self.input_dim, self.units)).astype("float32"))
+    # def set_mask_rand(self):
+    #     self.mask = tf.constant(np.random.randint(2, size=(self.input_dim, self.units)).astype("float32"))
     
     def get_shape(self):
+        """Returns the layer shape (i.e. shape of the weight/mask matrix)
+        """
         return self.shape
     
     def set_mask(self,mask):
+        """Set the mask to given values
+
+        Args:
+            mask (np.ndarray): new mask values
+        """
         self.mask = tf.Variable(tf.cast(mask, "float32"), trainable=True, name="mask")
         self.trainable_weights.append(self.mask) 
     
@@ -260,9 +284,6 @@ class MaskedDense(layers.Layer):
     # def reset_mask(self):
     #     self.mask = tf.Variable(np.ones((self.input_dim,self.units), dtype="float32"))
         
-    # def get_all_weights(self):
-    #     return self.w
-    
     def get_pruned_weights(self):
         """Returns those weight elements that are masked (only used with binary Supermask)
 
@@ -291,7 +312,7 @@ class MaskedDense(layers.Layer):
     
     @tf.function
     def call(self, inputs):
-        """Expands the call function of a normal layer by applying the (signed) Supermask before calculating the output
+        """Extends the call function of a normal layer by applying the (signed) Supermask before calculating the output
 
         Args:
             inputs (tf.Variable): input to the layer
@@ -325,7 +346,6 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
                  input_shape: int, 
                  masking_method: str, 
                  dynamic_scaling=True, 
-                #  use_bias=False, 
                  k=0.5, 
                  tanh_th=0.01, 
                  padding="same", 
@@ -336,7 +356,6 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         self._uses_learning_phase = True
         self.filters = filters
 
-        # self.use_bias = use_bias
 
         self.type = "conv"
         
@@ -404,30 +423,39 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         self.mask = tf.Variable(tf.cast(mask, "float32"), name="mask")
         
     def get_mask(self, as_logit=False):
+        """ONLY USED WITH BINARY MASKING - NOT IN USE FOR SIGNED SUPERMASKS
+        Returns the (logit) mask of the layer
+
+        Args:
+            as_logit (bool, optional): True if return mask values as "logit" i.e. the real valued mask values. Defaults to False.
+
+        Returns:
+            tf.Variable: mask 
+        """
         if as_logit is True:
             return self.mask
         else:
             return tf.math.sigmoid(self.mask)
     
     def get_bernoulli_mask(self):
+        """Returns the effective mask
+
+        Returns:
+            tf.Variable: effective mask
+        """
         return self.bernoulli_mask
     
     def get_normal_weights(self):
+        """Returns the weights of the layer"""
         return self.w
     
     def set_normal_weights(self, w):
+        """Sets the weights of the layer"""
         self.w = tf.Variable(w.astype("float32"), trainable=False, name="weights")
-    
-    def set_normal_weights_bias(self, wb):
-        self.w = tf.constant(wb[0].astype("float32"))
-        self.b = tf.constant(wb[1].astype("float32"))
     
     # def reset_mask(self):
     #     self.mask = tf.Variable(np.ones((self.input_dim,self.units), dtype="float32"))
     
-    # def get_bias(self):
-    #     return self.b
-        
     def get_pruned_weights(self):
         """Returns those weight elements that are masked (only used with binary Supermask)
 
@@ -535,6 +563,11 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         return tf.stop_gradient(effective_mask) + tanh_mask - tf.stop_gradient(tanh_mask) 
     
     def score_mask(self):
+        """Calculates the binary Supermask in the fashion of Ramarunjan et al - not used
+
+        Returns:
+            tf.Variable: effective binary score Supermask
+        """
         sigmoid_mask = tf.math.sigmoid(self.mask)
 
         threshold = tf.math.reduce_min(tf.math.top_k(tf.reshape(sigmoid_mask, [-1]), self.k_idx, sorted=False).values)
@@ -546,6 +579,14 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         
     @tf.function
     def call(self, inputs):
+        """Extends the call function of a normal layer by applying the (signed) Supermask before calculating the output
+
+        Args:
+            inputs (tf.Variable): input to the layer
+
+        Returns:
+            tf.Variable: output of the layer
+        """
 
         inputs = tf.cast(inputs, tf.float32)
 
