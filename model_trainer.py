@@ -89,7 +89,7 @@ class ModelTrainer():
         
         self.final_masks = []
         
-    #@tf.function
+    @tf.function
     def train_step(self, x_batch, y_batch):
         """Single train step
 
@@ -106,8 +106,6 @@ class ModelTrainer():
             loss = self.train_loss_fn(y_batch, predicted)
             
             gradients = tape.gradient(loss, self.model.trainable_variables)
-
-            # print(gradients)
 
         #gradients = [tf.clip_by_norm(g, .5) for g in gradients]
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
