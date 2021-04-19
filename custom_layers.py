@@ -96,8 +96,8 @@ class MaskedDense(layers.Layer):
                  masking_method: str,
                  name=None, 
                  dynamic_scaling=True, 
-                 k=0.5, 
-                 tanh_th=0.01):  
+                 k=0.5):
+                #  tanh_th=0.01):  
 
         super(MaskedDense,self).__init__()
 
@@ -122,20 +122,20 @@ class MaskedDense(layers.Layer):
         self.mask = tf.Variable(initial_value=init_mask(shape=(input_dim, units), dtype="float32"), trainable=True,
                                 name="mask")
 
-        self.threshold = 0.5 
+        # self.threshold = 0.5 
         
-        self.multiplier = 1.
-        self.no_ones = 0.
+        # self.multiplier = 1.
+        # # self.no_ones = 0.
         
         
         self.w = tf.Variable(init_w(shape=(input_dim, units),dtype='float32'), trainable=False, name="w")
 
         self.k = k
         self.k_idx =  tf.cast(tf.cast(tf.reshape(self.mask, [-1]).get_shape()[0], tf.float32)*k, tf.int32)
-        self.tanh_th = tanh_th
+        self.tanh_th = 1. #tanh_th
 
         self.masking_method = masking_method
-        self.masking = self.signed_supermask if masking_method is "fixed" else self.signed_supermask_score
+        # self.masking = self.signed_supermask if masking_method is "fixed" else self.signed_supermask_score
 
         # print("Masking Method: ", self.masking_method)
 
@@ -315,7 +315,7 @@ class MaskedDense(layers.Layer):
         weights_masked = tf.boolean_mask(self.w, self.bernoulli_mask) 
         return weights_masked 
     
-    # @tf.function
+    @tf.function
     def call(self, inputs):
         """Extends the call function of a normal layer by applying the (signed) Supermask before calculating the output
 
@@ -327,10 +327,10 @@ class MaskedDense(layers.Layer):
         """
         inputs = tf.cast(inputs, tf.float32)
         
-        if self.masking_method == "fixed":
-            sig_mask = self.signed_supermask() 
-        else:
-            sig_mask = self.signed_supermask_score()
+        #if self.masking_method == "fixed":
+        sig_mask = self.signed_supermask() 
+        #else:
+        #    sig_mask = self.signed_supermask_score()
         weights_masked = tf.multiply(self.w, sig_mask)
         # if self.dynamic_scaling is True:
             # self.no_ones = tf.reduce_sum(weights_masked)
@@ -351,7 +351,7 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
                  masking_method: str, 
                  dynamic_scaling=True, 
                  k=0.5, 
-                 tanh_th=0.01, 
+                #  tanh_th=0.01, 
                  padding="same", 
                  strides=(1,1), *args, **kwargs):
         
@@ -371,7 +371,7 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
 
         self.total_mask_params= tf.cast(tf.size(self.mask), tf.float32)
         
-        self.threshold = tf.constant(0.5, dtype="float32")
+        # self.threshold = tf.constant(0.5, dtype="float32")
         
         self.bernoulli_mask = self.mask
         
@@ -388,19 +388,19 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
 
         self.dynamic_scaling = dynamic_scaling
 
-        self.no_ones = 0.
+        # self.no_ones = 0.
        
         self.k = k 
         self.k_idx =  tf.cast(tf.cast(tf.reshape(self.mask, [-1]).get_shape()[0], tf.float32)*k, tf.int32)
         
-        self.tanh_th = tanh_th
+        self.tanh_th = 1. #tanh_th
         
         self.masking_method = masking_method
-        self.masking = self.signed_supermask if masking_method is "fixed" else self.signed_supermask_score
+        # self.masking = self.signed_supermask if masking_method is "fixed" else self.signed_supermask_score
 
 
     def update_tanh_th(self, percentage=0.75):
-        """Updates the threshold for the mask step function. In case of a fixed threshold masking, this function is not used
+        """Updates the threshold for the mask step function. This function is only called once after initialization
 
         Args:
             percentage (float, optional): percentage value of maximum weight. Defaults to 0.75.
@@ -594,10 +594,10 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
 
         inputs = tf.cast(inputs, tf.float32)
 
-        if self.masking_method == "fixed":
-            sig_mask = self.signed_supermask()
-        else:
-            sig_mask = self.signed_supermask_score()
+        #if self.masking_method == "fixed":
+        sig_mask = self.signed_supermask()
+        #else:
+        #    sig_mask = self.signed_supermask_score()
         
         weights_masked = tf.multiply(self.w, sig_mask)
 

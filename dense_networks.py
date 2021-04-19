@@ -65,7 +65,7 @@ class FCN_Mask(tf.keras.Model):
     
     def __init__(self, 
                  dynamic_scaling=False, 
-                 tanh_th=.5,
+                #  tanh_th=.5,
                  k=0.5, 
                  masking_method="fixed"):
 
@@ -75,21 +75,21 @@ class FCN_Mask(tf.keras.Model):
                                      units=300, 
                                      dynamic_scaling=dynamic_scaling, 
                                      k=k, 
-                                     tanh_th=tanh_th,
+                                    #  tanh_th=tanh_th,
                                      masking_method=masking_method)
         
         self.linear_h1 = MaskedDense(input_dim=300, 
                                      units=100, 
                                      dynamic_scaling=dynamic_scaling, 
                                      k=k, 
-                                     tanh_th=tanh_th,
+                                    #  tanh_th=tanh_th,
                                      masking_method=masking_method)
         
         self.linear_out = MaskedDense(input_dim=100, 
                                       units=10, 
                                       dynamic_scaling=dynamic_scaling, 
                                       k=k, 
-                                      tanh_th=tanh_th,
+                                    #   tanh_th=tanh_th,
                                       masking_method=masking_method)
     
 

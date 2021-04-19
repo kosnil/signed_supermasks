@@ -79,13 +79,13 @@ def network_builder(config: dict) -> tf.keras.Model:
     else:
         if config["model"]["type"] == "FCN":
             model = FCN_Mask(masking_method=config["model"]["masking_method"],
-                             tanh_th=config["model"]["tanh_th"],
+                            #  tanh_th=config["model"]["tanh_th"],
                              k=config["model"]["k_dense"],
                              dynamic_scaling=config["model"]["dynamic_scaling_dense"])
         elif config["model"]["type"] == "Conv2":
             model = Conv2_Mask(input_shape=input_shape,
                                 masking_method=config["model"]["masking_method"],
-                                tanh_th=config["model"]["tanh_th"],
+                                # tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
@@ -94,7 +94,7 @@ def network_builder(config: dict) -> tf.keras.Model:
         elif config["model"]["type"] == "Conv4":
             model = Conv4_Mask(input_shape=input_shape,
                                 masking_method=config["model"]["masking_method"],
-                                tanh_th=config["model"]["tanh_th"],
+                                # tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
@@ -104,7 +104,7 @@ def network_builder(config: dict) -> tf.keras.Model:
         elif config["model"]["type"] == "Conv6":
             model = Conv6_Mask(input_shape=input_shape,
                                 masking_method=config["model"]["masking_method"],
-                                tanh_th=config["model"]["tanh_th"],
+                                # tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
@@ -114,7 +114,7 @@ def network_builder(config: dict) -> tf.keras.Model:
         elif config["model"]["type"] == "Conv8":
             model = Conv8_Mask(input_shape=input_shape,
                                 masking_method=config["model"]["masking_method"],
-                                tanh_th=config["model"]["tanh_th"],
+                                # tanh_th=config["model"]["tanh_th"],
                                 k_cnn=config["model"]["k_cnn"],
                                 k_dense=config["model"]["k_dense"],
                                 dynamic_scaling_cnn=config["model"]["dynamic_scaling_cnn"],
@@ -145,11 +145,11 @@ def network_builder(config: dict) -> tf.keras.Model:
             print("Please define a model")
             return 0
  
-        if config["model"]["masking_method"] == "fixed":
-            print("Fixed Threshold...updating tanh_th")
-            for layer in model.layers:
-                if layer.type == "fefo" or layer.type == "conv":
-                    layer.update_tanh_th(percentage=config["model"]["tanh_th"])
+        # if config["model"]["masking_method"] == "fixed":
+        #     print("Fixed Threshold...updating tanh_th")
+        #     for layer in model.layers:
+        #         if layer.type == "fefo" or layer.type == "conv":
+        #             layer.update_tanh_th(percentage=config["model"]["tanh_th"])
 
         return model
     
