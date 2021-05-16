@@ -19,8 +19,8 @@ The code for the training algorithm and the conducted experiments can be found o
 
 The code is structured such that we only need to specify a few parameters such as the network architecture (among the available FCN, Conv2, Conv4, Conv6 and Conv8) and learning hyperparameters along with the path to the previously initialized weights. This way, the actual training process is speed up and we the different all base on the same initial weights/masks.
 
-             | FCN | Conv2 | Conv4 | Conv6 | Conv 8
------------- | --- | ----- | ----- | ----- | ----- 
-Conv <br/> Layers | | 64,64,pool | 64,64,pool <br/> 128,128,pool | 64,64,pool <br/> 128,128,pool <br/> 256,256,pool <br/> 64,64,pool <br/> 128,128,pool <br/> 256,256,pool <br/> 512,512,pool 
-FC Layers | 300,100,10 | 256,256,10 | 256,256,10 | 256,256,10 | 256,256,10 
-Parameter Count | 266.200 | 4.300.992 | 2.425.024 | 2.261.184 | 5.275.840
+|             | FCN | Conv2 | Conv4 | Conv6 | Conv 8
+|------------ | --- | ----- | ----- | ----- | ----- 
+| Conv <br/> Layers | | 64,64,pool | 64,64,pool <br/> 128,128,pool | 64,64,pool <br/> 128,128,pool <br/> 256,256,pool <br/> 64,64,pool <br/> 128,128,pool <br/> 256,256,pool <br/> 512,512,pool 
+| FC Layers | 300,100,10 | 256,256,10 | 256,256,10 | 256,256,10 | 256,256,10 
+| Parameter Count | 266.200 | 4.300.992 | 2.425.024 | 2.261.184 | 5.275.840
