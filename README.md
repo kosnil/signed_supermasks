@@ -1,9 +1,5 @@
 # Signing the Supermask: Hide and Invert
 
-## Authors
-
-This codebase was developed by Nils Koster in 2020.
-
 ## Background
 This repository implements the experiments conducted in the paper *Signing the Supermask: Hide and Invert*.
 They present a novel approach that trains a given neural network by simply selecting important weights, possibly inverting their sign and dropping the rest.
