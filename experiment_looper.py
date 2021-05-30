@@ -179,11 +179,6 @@ def initialize_model(model:tf.keras.Model,
         model = init.set_loaded_weights(model = model, 
                                         path = config["path_masks"]+mask_file_name)
     
-        if config["model"]["masking_method"] == "fixed":
-            print("Fixed Threshold...updating tanh_th")
-            for layer in model.layers:
-                if layer.type == "fefo" or layer.type == "conv":
-                    layer.update_tanh_th(percentage=config["model"]["tanh_th"])
 
     return model     
 
@@ -220,12 +215,22 @@ def repeat_experiment(config:dict) -> list:
         
         model = initialize_model(model, config, run_number=i)
         
+        # if (config["model"]["masking_method"] == "fixed" 
+            # or config["model"]["masking_method"] == "binary"):
+            # print("Fixed Threshold...updating tanh_th")
+            # for layer in model.layers:
+                # if layer.type == "fefo" or layer.type == "conv":
+                    # layer.update_tanh_th(percentage=config["model"]["tanh_th"])
+
         print("Model initialized!")
 
+        train_w_binary_mask = True if config["model"]["masking_method"] == "binary" else False
+        
         mt = ModelTrainer(model, 
                           ds_train = ds_train, 
                           ds_test = ds_test, 
-                          optimizer_args=config["optimizer"])
+                          optimizer_args = config["optimizer"],
+                          binary_mask = train_w_binary_mask)
         
         time0 = time.time()
         print("Start training...")

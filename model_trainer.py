@@ -13,7 +13,7 @@ class ModelTrainer():
         optimizer_args (dict): specifies parameters for the optimizer used to train model
     """
 
-    def __init__(self, model, ds_train, ds_test, optimizer_args={}):
+    def __init__(self, model, ds_train, ds_test, optimizer_args={}, binary_mask=False):
         self.model = model
         
         steps_per_epoch = 390
@@ -89,6 +89,8 @@ class ModelTrainer():
         
         self.final_masks = []
         
+        self.binary_mask = binary_mask
+        
     @tf.function
     def train_step(self, x_batch, y_batch):
         """Single train step
@@ -116,10 +118,12 @@ class ModelTrainer():
         """
         Calculates the ratio of remaining weights
         """
-        
-        global_no_ones = np.sum([np.sum(np.abs(layer.signed_supermask())) for layer in self.model.layers 
-                                 if layer.type == "fefo" or layer.type == "conv"])
-        
+        if self.binary_mask == False: 
+            global_no_ones = np.sum([np.sum(np.abs(layer.signed_supermask())) for layer in self.model.layers 
+                                        if layer.type == "fefo" or layer.type == "conv"])
+        else:
+            global_no_ones = np.sum([np.sum(layer.binary_supermask()) for layer in self.model.layers 
+                                        if layer.type == "fefo" or layer.type == "conv"])
         global_size = np.sum([tf.size(layer.mask) for layer in self.model.layers 
                               if layer.type == "fefo" or layer.type == "conv"])
 

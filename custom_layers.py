@@ -96,8 +96,8 @@ class MaskedDense(layers.Layer):
                  masking_method: str,
                  name=None, 
                  dynamic_scaling=True, 
-                 k=0.5):
-                #  tanh_th=0.01):  
+                 k=0.5,
+                 tanh_th=0.01):  
 
         super(MaskedDense,self).__init__()
 
@@ -132,7 +132,7 @@ class MaskedDense(layers.Layer):
 
         self.k = k
         self.k_idx =  tf.cast(tf.cast(tf.reshape(self.mask, [-1]).get_shape()[0], tf.float32)*k, tf.int32)
-        self.tanh_th = 1. #tanh_th
+        self.tanh_th = tanh_th
 
         self.masking_method = masking_method
         # self.masking = self.signed_supermask if masking_method is "fixed" else self.signed_supermask_score
@@ -198,10 +198,12 @@ class MaskedDense(layers.Layer):
         Returns:
             tf.Variable: effective binary Supermask. Note the straight through estimtator trick
         """
-        sigmoid_mask = self.mask_activation()
+        sigmoid_mask = self.mask #self.mask_activation()
 
-        bernoulli_sample = tf.random.uniform(shape = self.shape, minval=0., maxval=1.)
-        effective_mask = tf.where(sigmoid_mask > bernoulli_sample, 1., 0.)
+        # bernoulli_sample = tf.random.uniform(shape = self.shape, minval=0., maxval=1.)
+        # effective_mask = tf.where(sigmoid_mask > bernoulli_sample, 1., 0.)
+
+        effective_mask = tf.where(sigmoid_mask > self.tanh_th, 1., 0.)
         
         self.bernoulli_mask = effective_mask
         
@@ -328,10 +330,13 @@ class MaskedDense(layers.Layer):
         inputs = tf.cast(inputs, tf.float32)
         
         #if self.masking_method == "fixed":
-        sig_mask = self.signed_supermask() 
+        if self.masking_method == "fixed":
+            effective_mask = self.signed_supermask()
+        elif self.masking_method == "binary":
+            effective_mask = self.binary_supermask()
         #else:
         #    sig_mask = self.signed_supermask_score()
-        weights_masked = tf.multiply(self.w, sig_mask)
+        weights_masked = tf.multiply(self.w,effective_mask)
         # if self.dynamic_scaling is True:
             # self.no_ones = tf.reduce_sum(weights_masked)
             # self.multiplier =  tf.math.divide(tf.size(sig_mask, out_type=tf.float32), self.no_ones) #* (1./self.sigmoid_multiplier)
@@ -507,10 +512,12 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
         Returns:
             tf.Variable: effective binary Supermask. Note the straight through estimtator trick
         """
-        sigmoid_mask = self.mask_activation() 
+        sigmoid_mask = self.mask #self.mask_activation() 
 
-        bernoulli_sample = tf.random.uniform(shape = self.weight_shape, minval=0., maxval=1.)
-        effective_mask = tf.where(sigmoid_mask > bernoulli_sample, 1., 0.)
+        # bernoulli_sample = tf.random.uniform(shape = self.weight_shape, minval=0., maxval=1.)
+        # effective_mask = tf.where(sigmoid_mask > bernoulli_sample, 1., 0.)
+
+        effective_mask = tf.where(sigmoid_mask > self.tanh_th, 1., 0.)
 
         self.bernoulli_mask = effective_mask
     
@@ -594,12 +601,14 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
 
         inputs = tf.cast(inputs, tf.float32)
 
-        #if self.masking_method == "fixed":
-        sig_mask = self.signed_supermask()
+        if self.masking_method == "fixed":
+            effective_mask = self.signed_supermask()
+        elif self.masking_method == "binary":
+            effective_mask = self.binary_supermask()
         #else:
         #    sig_mask = self.signed_supermask_score()
         
-        weights_masked = tf.multiply(self.w, sig_mask)
+        weights_masked = tf.multiply(self.w, effective_mask)
 
         # if self.dynamic_scaling:
             # single_filter_size = tf.reduce_prod(sig_mask.shape[:-1])
