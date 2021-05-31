@@ -8,6 +8,8 @@
 **/.vscode
 **/__pycache__
 
+**/\~
+
 *.ipynb
 *.pdf
 *.pgf
