@@ -7,6 +7,8 @@
 **/.ipynb_checkpoints
 **/.vscode
 **/__pycache__
+**/configs/VGG16
+**/configs/VGG19
 
 **/\~
 
