@@ -1,4 +1,4 @@
-# Signing the Supermask: Hide and Invert
+# Signing the Supermask: Keep, Hide, Invert
 
 ## Background
 This repository implements the experiments conducted in the paper *Signing the Supermask: Hide and Invert*.
