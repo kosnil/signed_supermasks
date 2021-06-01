@@ -4,7 +4,7 @@ data: "mnist"
 
 model: 
  type: "FCN"
- masking_method: "fixed" #variable == no score, fixed == score
+ masking_method: "fixed"
  tanh_th: .4
  k_cnn: .25
  k_dense: .5

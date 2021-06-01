@@ -3,9 +3,9 @@ baseline: False
 data: "cifar"
 
 model: 
- type: "Conv6"
+ type: "Conv2"
  masking_method: "fixed" 
- tanh_th: .4
+ tanh_th: .1
  k_cnn: .25
  k_dense: .25
  dynamic_scaling_cnn: False
@@ -13,8 +13,8 @@ model:
  width_multiplier: 1.
  use_dropout: False
 
-path_weights: "./weights/Conv6/weight/signed_constant/he/"
-path_masks: "./weights/Conv6/mask/uniform/xavier/"
+path_weights: "./weights/Conv2/weight/signed_constant/elu_scaled/"
+path_masks: "./weights/Conv2/mask/uniform/xavier/"
 
 #init parameters weights
 #init_distribution_w: "uniform"
@@ -32,7 +32,8 @@ path_masks: "./weights/Conv6/mask/uniform/xavier/"
 optimizer:
  type: "sgdw"
  lr_scheduler: "exponential_decay" #exponential_decay, None
- lr: .05
+ decay_steps: 10
+ lr: .03
  weight_decay: 5e-4
  momentum: .9
  nesterov: True
@@ -41,4 +42,4 @@ optimizer:
 
 training:
  epochs: 100
- no_experiments: 50 #max: 50
+ no_experiments: 5 #max: 50

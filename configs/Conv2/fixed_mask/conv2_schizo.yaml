@@ -4,7 +4,7 @@ data: "cifar"
 
 model: 
  type: "Conv2"
- masking_method: "fixed" #variable == no score, fixed == score
+ masking_method: "fixed" 
  tanh_th: .6
  k_cnn: .25
  k_dense: .25
