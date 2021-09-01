@@ -1,3 +1,4 @@
+**/data
 **/weights
 **/img
 **/latex
@@ -24,3 +25,4 @@ test_py_mode_vscode.py
 custom_nn.py
 training_utils.py
 misc/data_RL18.feather
+
