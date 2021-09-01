@@ -1,5 +1,7 @@
 **/data
 **/weights
+**/example_weights
+**/logs
 **/img
 **/latex
 **/plots
@@ -16,6 +18,10 @@
 *.ipynb
 *.pdf
 *.pgf
+*.png
+*.Rhistory
+*.xml
+*.iml
 
 evo_opt.py
 README_vorlage.md
