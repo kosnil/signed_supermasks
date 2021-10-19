@@ -1,4 +1,3 @@
-
 from typing import Tuple
 import tensorflow as tf
 import numpy as np
@@ -79,6 +78,7 @@ class initializer:
             elif method == "elu":
                 bound = np.sqrt(4.5) / np.sqrt(fan_in)
             bound *= factor
+            
             # print("fan in, fan out", fan_in, fan_out)
             # print("uniform bound:", bound)
 

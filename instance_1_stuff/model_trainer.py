@@ -76,7 +76,6 @@ class ModelTrainer():
         else:
             self.train_loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
             self.test_loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
-            
         
         if optimizer_args["type"] == "sgd":
             self.optimizer = tf.keras.optimizers.SGD(learning_rate=lr, 
@@ -225,8 +224,7 @@ class ModelTrainer():
 
                     self.cooldown_counter = cooldown
                     
-                    self.reduction_counter += 1
-            
+                    self.reduction_counter += 1            
 
 
     def train(self, 

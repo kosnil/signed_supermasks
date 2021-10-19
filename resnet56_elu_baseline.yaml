@@ -1,0 +1,40 @@
+#model parameters
+baseline: True
+data: "cifar"
+
+model: 
+ type: "ResNet56"
+ masking_method: "fixed"
+ tanh_th: .75
+ filter_size_multi: 1.
+
+#path_weights: "./weights/ResNet20/weight/signed_constant/elu_scaled/"
+#path_masks: "./weights/ResNet20/mask/uniform/xavier/"
+
+#if init on the fly
+init:
+ on_the_fly: True
+ weight:
+  dist: "uniform"
+  method: "he"
+  factor: .75 # will be in np.sqrt()
+
+  
+
+#optimizer parameters
+optimizer:
+ type: "sgdw"
+ lr_scheduler: "None" #exponential_decay, None (None = reduce lr on plateau)
+ lr: .15
+ weight_decay: 1e-4
+ momentum: .9
+ nesterov: True
+ #in case rms_prop is used
+ centered: True
+
+training:
+ epochs: 90
+ no_experiments: 50 #max: 50
+ patience: 15
+ reductions: 7
+ lr_reduce_factor: .1

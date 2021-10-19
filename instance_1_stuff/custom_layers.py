@@ -86,8 +86,7 @@ class GlobalAveragePooling2DExt(tf.keras.layers.GlobalAveragePooling2D):
 
 class DenseExt(tf.keras.layers.Dense):
     """Extends tf.keras.Dense class with a type variable which is used in the initialization phase"""
-    def __init__(self, 
-                 units, 
+    def __init__(self, units, 
                  use_bias=False):
         super(DenseExt, self).__init__(units, use_bias=use_bias)
         self.type = "fefo_normal"

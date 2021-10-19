@@ -1,5 +1,4 @@
 import tensorflow as tf
-from tensorflow.python.ops.gen_batch_ops import batch
 import tensorflow_datasets as tfds
 import numpy as np
 
@@ -38,22 +37,21 @@ def data_loader(dataset:str):
                                                 shuffle_files=True, 
                                                 as_supervised=True,
                                                 with_info=True)
+        
+        return ds_train, ds_test, ds_info
 
     elif dataset == "imagenet":
-        BASEDIR = "./data/tfds_data"
-        DOWNLOADIR = "./data/imagenet_raw"
+        BASEDIR = "data/tfds/tfds_data"
+        DOWNLOADIR = "data/raw"
 
 
-        (ds_train, ds_test), ds_info = tfds.load("imagenet2012", 
-                                                 split=['train[:70%]', 'validation[:70%]'],
-                                                data_dir=BASEDIR, 
-                                                download=True, 
-                                                shuffle_files=True,
-                                                as_supervised=True, 
-                                                with_info=True, 
-                                                download_and_prepare_kwargs= {'download_dir':DOWNLOADIR})
+        (ds_train, ds_test), ds_info = tfds.load("Imagenet2012", split=['train', 'validation'],
+                                                 data_dir=BASEDIR, download=True, shuffle_files=True,
+                                                 as_supervised=True, with_info=True, 
+                                                 download_and_prepare_kwargs= {'download_dir':DOWNLOADIR})
             
-    return ds_train, ds_test, ds_info
+        return ds_train, ds_test, ds_info
+
 # @tf.function
 def normalize_cifar10(image, label):
     """Normalizes the CIFAR-10 Dataset by casting all values to flat and then standardizing each image separately
@@ -73,6 +71,11 @@ def normalize_cifar10_resnet(image, label):
 
     return image, tf.one_hot(label,10)
 
+def normalize_pacm(image, label):
+    image = tf.cast(image, tf.float32)
+    image = tf.image.per_image_standardization(image)
+    return image, tf.one_hot(label,2)
+
 def normalize_cifar100(image, label):
     """Normalizes the CIFAR-100 Dataset by casting all values to flat and then standardizing each image separately
     """
@@ -89,8 +92,8 @@ def normalize_cifar100_train(image, label):
     image = tf.image.random_crop(image, [32,32,3])
     
     return image, label
-
-
+    
+    
 def normalize_mnist(image, label):
     """Normalizes images: `uint8` -> `float32`."""
     image = tf.cast(image, tf.float32)
@@ -150,7 +153,7 @@ def normalize_imagenet_test(image, label):
     image = tf.image.per_image_standardization(image)
     return image, label #tf.one_hot(label,1000)
 # @tf.function
-def prep_data(ds, ds_info, batch_size, testset=False):
+def prep_data(ds, ds_info, batch_size, testset=False, distributed=False, verbose=0):
     """Prepares the dataset
 
     Args:
@@ -177,13 +180,12 @@ def prep_data(ds, ds_info, batch_size, testset=False):
     elif ds_info.name == "cifar100":
         ds = ds.cache()
         if testset == False: 
-            ds = ds.shuffle(ds_info.splits["train"].num_examples).repeat(7)
-            ds = ds.map(normalize_cifar100_train, num_parallel_calls = tf.data.experimental.AUTOTUNE)
+            ds = ds.shuffle(ds_info.splits["train"].num_examples).repeat(2)
+            ds = ds.map(normalize_cifar100_train, num_parallel_calls=TF_AUTOTUNE)
         else:
             ds = ds.shuffle(ds_info.splits["test"].num_examples)#.repeat()
-        ds = ds.map(normalize_cifar100, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        
-        
+            ds = ds.map(normalize_cifar100, num_parallel_calls=TF_AUTOTUNE)
+        #ds = ds.cache()
     elif ds_info.name == "imagenet2012" and testset == False:
         # ds = ds.shuffle(1024)
         # ds = ds.cache()
@@ -192,26 +194,16 @@ def prep_data(ds, ds_info, batch_size, testset=False):
     elif ds_info.name == "imagenet2012" and testset == True:
         # ds = ds.shuffle(64)
         # ds = ds.cache()
-        ds = ds.map(normalize_imagenet_test, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        ds = ds.map(normalize_imagenet_test, num_parallel_calls=tf.data.experimental.AUTOTUNE).cache()
         ds = ds.apply(tf.data.experimental.ignore_errors())
     #ds = ds.cache()
     #ds = ds.shuffle(ds_info.splits['train'].num_examples)
-    ds = ds.batch(batch_size)
-    ds = ds.prefetch(tf.data.experimental.AUTOTUNE)
     
-    return ds
+    ds = ds.batch(batch_size)
+    
+    return ds.prefetch(TF_AUTOTUNE)
 
-def prep_imagenet(ds, batch_size):
-    ds = ds.map(normalize_imagenet, num_parallel_calls = TF_AUTOTUNE)
-    ds = ds.apply(tf.data.experimental.ignore_errors())
-    return ds.batch(batch_size).prefetch(TF_AUTOTUNE)
-
-def prep_imagenet_test(ds, batch_size):
-    ds = ds.map(normalize_imagenet_test, num_parallel_calls = TF_AUTOTUNE)
-    ds = ds.apply(tf.data.experimental.ignore_errors())
-    return ds.batch(batch_size).prefetch(TF_AUTOTUNE)
-
-def data_handler(dataset: str, batch_size=128):
+def data_handler(dataset: str, batch_size=128, distributed=False, verbose=0):
     """Pipeline that loads and prepares the dataset
 
     Args:
@@ -224,22 +216,45 @@ def data_handler(dataset: str, batch_size=128):
 
     ds_train = prep_data(ds=ds_train, 
                          ds_info=ds_info, 
-                         batch_size=batch_size)
+                         batch_size=batch_size,
+                         distributed=distributed, 
+                         verbose=verbose)
     
     ds_test = prep_data(ds=ds_test, 
                         ds_info=ds_info, 
                         batch_size=batch_size, 
-                        testset = True)
+                        testset = True,
+                        distributed=distributed, 
+                        verbose=verbose)
 
-    return ds_train, ds_test
+    return ds_train, ds_test, ds_info
+
+
+# IMAGENET SPECIFIC
+################################################################################
+
+
+
+def prep_imagenet(ds, batch_size):
+    ds = ds.shuffle(batch_size)
+    ds = ds.map(normalize_imagenet, num_parallel_calls = TF_AUTOTUNE)
+    #ds = ds.cache()
+    ds = ds.apply(tf.data.experimental.ignore_errors())
+    return ds.batch(batch_size)#.prefetch(TF_AUTOTUNE)
+
+def prep_imagenet_test(ds, batch_size):
+    ds = ds.map(normalize_imagenet_test, num_parallel_calls = TF_AUTOTUNE)
+    ds = ds.cache()
+    ds = ds.apply(tf.data.experimental.ignore_errors())
+    return ds.batch(batch_size)#.prefetch(TF_AUTOTUNE)
 
 def data_handler_imagenet(batch_size=128):
     
-    BASEDIR = "./data/tfds_data"
-    DOWNLOADIR = "./data/imagenet_raw"
+    BASEDIR = "data/tfds/tfds_data"
+    DOWNLOADIR = "data/raw"
 
     (ds_train, ds_test) = tfds.load("imagenet2012", 
-                                    split=['train[:70%]', 'validation[:70%]'],
+                                    split=['train', 'validation'],
                                     data_dir=BASEDIR, 
                                     download=True, 
                                     shuffle_files=True,
@@ -248,6 +263,6 @@ def data_handler_imagenet(batch_size=128):
                                     download_and_prepare_kwargs= {'download_dir':DOWNLOADIR})
     
     ds_train = prep_imagenet(ds_train, batch_size=batch_size)
-    ds_test = prep_imagenet(ds_test, batch_size=batch_size)
+    ds_test = prep_imagenet_test(ds_test, batch_size=batch_size)
 
     return ds_train, ds_test

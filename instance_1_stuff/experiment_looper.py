@@ -53,6 +53,10 @@ def network_builder(config: dict) -> tf.keras.Model:
     #depending on the dataset the model is trained on, choose the appropriate input shape.
     if config["data"] == "cifar":
         input_shape = (128,32,32,3)
+        NUM_CLASSES = 10
+    elif config["data"] == "cifar100":
+        input_shape = (256,32,32,3)
+        NUM_CLASSES = 100
     elif config["data"] == "mnist":
         input_shape = (128,784)
     
@@ -76,9 +80,9 @@ def network_builder(config: dict) -> tf.keras.Model:
             model = ResNet20(num_classes=10,
                              filter_size_multi=config["model"]["filter_size_multi"])
         elif config["model"]["type"] == "ResNet56":
-            model = ResNet56(num_classes=10)
+            model = ResNet56(num_classes=NUM_CLASSES)
         elif config["model"]["type"] == "ResNet110":
-            model = ResNet110(num_classes=10)
+            model = ResNet110(num_classes=NUM_CLASSES)
         
         else:
             print("Please define a model")
@@ -142,11 +146,11 @@ def network_builder(config: dict) -> tf.keras.Model:
         
         elif config["model"]["type"] == "ResNet56":
             model = ResNet56_Mask(input_shape=input_shape,
-                                  num_classes=10) 
+                                  num_classes=NUM_CLASSES) 
             
         elif config["model"]["type"] == "ResNet110":
             model = ResNet110_Mask(input_shape=input_shape,
-                                  num_classes=10) 
+                                  num_classes=NUM_CLASSES) 
         # elif config["model"]["type"] == "VGG16":
         #     model = VGG16_Mask(input_shape=input_shape,
         #                         masking_method=config["model"]["masking_method"],
@@ -273,7 +277,7 @@ def repeat_experiment(config:dict) -> list:
     """
     
     print("Loading dataset...")
-    ds_train, ds_test = data_handler(config["data"])
+    ds_train, ds_test, _ = data_handler(config["data"])
     print("Dataset loaded!")
 
     results = []
@@ -311,10 +315,15 @@ def repeat_experiment(config:dict) -> list:
         
         
         dataset_info = {
-            "ds_size": ds_train.cardinality().numpy(),
-            "name": "cifar",
-            "batch_size": 128,
+            "ds_size": ds_train.cardinality().numpy()
         }
+        
+        if config["data"] == "cifar":
+            dataset_info["name"] = "cifar"
+            dataset_info["batch_size"] = 128
+        elif config["data"] == "cifar100":
+            dataset_info["name"] = "cifar100"
+            dataset_info["batch_size"] = 256
         
         mt = ModelTrainer(model, 
                           ds_train = ds_train, 
