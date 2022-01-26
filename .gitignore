@@ -1,3 +1,6 @@
+**/instance_1_stuff
+**/instance_2_stuff
+**/misc
 **/data
 **/weights
 **/example_weights
@@ -8,6 +11,7 @@
 **/results
 **/_pycache_
 **/.ipynb_checkpoints
+**/.idea
 **/.vscode
 **/__pycache__
 **/configs/VGG16
@@ -22,6 +26,7 @@
 *.Rhistory
 *.xml
 *.iml
+*.zip
 
 evo_opt.py
 README_vorlage.md
@@ -30,5 +35,6 @@ jannik_init_example.py
 test_py_mode_vscode.py
 custom_nn.py
 training_utils.py
-misc/data_RL18.feather
+weight_initializer_experimental.py
+
 
