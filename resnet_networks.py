@@ -301,7 +301,7 @@ class BasicResnetBlockC(tf.keras.Model):
         
         #Conv1
         # print("input shape: ", input_shape)
-        self.conv2a = Conv2DExt(filters=filters, 
+        self.conv2a = Conv2DExt(filters=filters,
                                 kernel_size=1,
                                 strides=strides,
                                 padding="valid")
