@@ -21,8 +21,8 @@ While FCN was trained on MNIST only, the CNN architectures (Conv2 - Conv8) were 
 The code was written and tested on
 
 - Python 3.7
-- Tensorflow 2.2 (we strongly recommend a GPU)
-- NumPy 1.19
+- Tensorflow 2.7 (we strongly recommend a GPU)
+- NumPy 1.21
 
 
 ## Structure
