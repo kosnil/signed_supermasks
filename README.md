@@ -20,16 +20,14 @@ Furthermore, we trained ResNet20s with variying width on CIFAR-10, as well as Re
 The following table lists our results in terms of test accuracy and remaining weights in comparison to the most related work:
 
 |       |                      |                |      |       |                      |         |                    |       |                     |
-|:------|:--------------------:|:--------------:|:----:|:-----:|:--------------------:|:-------:|:------------------:|:-----:|:-------------------:|
 |       |                      | Accuracy \[%\] |      |       |                      |         | Rem. Weights \[%\] |       |                     |
 |       |       Baseline       |      [Zhou](https://arxiv.org/abs/1905.01067)      | [Ram.](https://arxiv.org/abs/1911.13299) | [Diff.](https://arxiv.org/abs/2103.09377) |    Sig. Supermask    |  Zhou   |        Ram.        | Diff. |   Sig. Supermask    |
 |:------|:--------------------:|:--------------:|:----:|:-----:|:--------------------:|:-------:|:------------------:|:-----:|:-------------------:|
-| FCN   | 97.43 \[97.4, 97.5\] |      98.0      |  \-  |  \-   | 97.48 \[97.3, 97.7\] | 11 - 93 |         \-         |  \-   | 3.77 \[3.7,3.8\]    |
-|:------|:--------------------:|:--------------:|:----:|:-----:|:--------------------:|:-------:|:------------------:|:-----:|:-------------------:|
-| Conv2 | 68.79 \[68.4, 69.2\] |      66.0      |  65  |  70   | 68.37 \[67.7, 69.0\] | 11 - 93 |         10         |  10   | 0.60 \[0.58, 0.62\] |
-| Conv4 | 74.50 \[74.7, 75.3\] |      72.5      |  74  |  79   | 77.40 \[76.7, 78.3\] | 11 - 93 |         10         |  10   |  2.91 \[2.9, 3.0\]  |
-| Conv6 | 75.91 \[75.4, 76.4\] |      76.5      |  77  |  82   | 79.17 \[78.1, 80.5\] | 11 - 93 |         10         |  10   |  2.36 \[1.9, 2.6\]  |
-| Conv8 | 72.24 \[71.4, 73.0\] |       \-       |  70  |  85   | 80.91 \[79.9, 81.7\] |   \-    |         10         |  10   |  1.17 \[1.1, 1.2\]  |
+| FCN   | 97.43  |      98.0      |  \-  |  \-   | 97.48  | 11 - 93 |         \-         |  \-   | 3.77  |
+| Conv2 | 68.79  |      66.0      |  65  |  70   | 68.37  | 11 - 93 |         10         |  10   | 0.60  |
+| Conv4 | 74.50  |      72.5      |  74  |  79   | 77.40  | 11 - 93 |         10         |  10   |  2.91 |
+| Conv6 | 75.91  |      76.5      |  77  |  82   | 79.17  | 11 - 93 |         10         |  10   |  2.36 |
+| Conv8 | 72.24  |       \-       |  70  |  85   | 80.91  |   \-    |         10         |  10   |  1.17 |
 
 For further and more detailed results, we refer to our paper. For instance, we vary weight and mask initialization, investigate the influence of batch normalization for the investigated ResNets and prune the networks to the extreme.
 
