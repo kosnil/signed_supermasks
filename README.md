@@ -68,6 +68,10 @@ Kailkhura</a></th>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 </tr>
+<tr>
+  <td colspan="5" style="text-align: center;">Accuracy \[%\]</td>       
+  <td colspan="4" style="text-align: center;">Rem. Weights \[%\]</td>
+<\tr>
 <tr class="even">
 <td style="text-align: left;">FCN</td>
 <td style="text-align: center;">97.43</td>
