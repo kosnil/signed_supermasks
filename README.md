@@ -20,8 +20,9 @@ Furthermore, we trained ResNet20s with variying width on CIFAR-10, as well as Re
 The following table lists our results in terms of test accuracy and remaining weights in comparison to the most related work:
 
 
-|       |       <td colspan=5>Accuracy \[%\]       <td colspan=4>triple Rem. Weights \[%\]
+
 |       |       Baseline       |      [Zhou et al.](https://arxiv.org/abs/1905.01067)      | [Ramanujan et al.](https://arxiv.org/abs/1911.13299) | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |    Sig. Supermask (Ours)   |  [Zhou et al.](https://arxiv.org/abs/1905.01067)   |        [Ramanujan et al.](https://arxiv.org/abs/1911.13299)        | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |   Sig. Supermask (Ours)   |
+|       |       <td colspan=5>Accuracy \[%\]       <td colspan=4>triple Rem. Weights \[%\]
 |:------|:--------------------:|:--------------:|:----:|:-----:|:--------------------:|:-------:|:------------------:|:-----:|:-------------------:|
 | FCN   | 97.43  |      98.0      |  \-  |  \-   | 97.48  | 11 - 93 |         \-         |  \-   | 3.77  |
 | Conv2 | 68.79  |      66.0      |  65  |  70   | 68.37  | 11 - 93 |         10         |  10   | 0.60  |
