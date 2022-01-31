@@ -69,6 +69,7 @@ Kailkhura</a></th>
 <td style="text-align: center;"></td>
 </tr>
 <tr>
+  <td style="text-align: center;"></td>
   <td colspan="5" style="text-align: center;">Accuracy \[%\]</td>       
   <td colspan="4" style="text-align: center;">Rem. Weights \[%\]</td>
 <\tr>
