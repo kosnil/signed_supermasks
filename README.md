@@ -3,7 +3,7 @@
 ## Background
 This repository implements the experiments conducted in the paper *Signing the Supermask: Hide and Invert*, ICLR 2022 or on arXiv.
 They present a novel approach that trains a given neural network by simply selecting important weights, possibly inverting their sign and dropping the rest.
-This proposition extends the work of [Zhou2019](https://arxiv.org/abs/1905.01067) ([Code](https://github.com/uber-research/deconstructing-lottery-tickets)) and [Ramanujan2019](https://arxiv.org/abs/1911.13299) ([Code](https://github.com/allenai/hidden-networks)) who consider masking but not sign-inverting the initial weights and follow the findings of the Lottery Ticket Hypothesis [Frankle2018](https://arxiv.org/abs/1803.03635) ([Code](https://github.com/google-research/lottery-ticket-hypothesis)).
+This proposition extends the work of [Zhou et al.](https://arxiv.org/abs/1905.01067) ([Code](https://github.com/uber-research/deconstructing-lottery-tickets)) and [Ramanujan et al.](https://arxiv.org/abs/1911.13299) ([Code](https://github.com/allenai/hidden-networks)) who consider masking but not sign-inverting the initial weights and follow the findings of the Lottery Ticket Hypothesis [Frankle2018](https://arxiv.org/abs/1803.03635) ([Code](https://github.com/google-research/lottery-ticket-hypothesis)).
 Through this extension and adaptations of initialization methods, they concurrently gain a pruning rate of 96% to 99% while matching or exceeding the performance of various baseline models and the current literature.
 
 Experiments can be run on the five different neural network architectures investigated in the paper. The table below shows the architecture of FCN, a simple feed-forward neural network as well as different VGG-like CNN architectures.
@@ -21,7 +21,7 @@ The following table lists our results in terms of test accuracy and remaining we
 
 |       |                      |                |      |       |                      |         |                    |       |                     |
 |       |                      | Accuracy \[%\] |      |       |                      |         | Rem. Weights \[%\] |       |                     |
-|       |       Baseline       |      [Zhou](https://arxiv.org/abs/1905.01067)      | [Ram.](https://arxiv.org/abs/1911.13299) | [Diff.](https://arxiv.org/abs/2103.09377) |    Sig. Supermask    |  Zhou   |        Ram.        | Diff. |   Sig. Supermask    |
+|       |       Baseline       |      [Zhou et al.](https://arxiv.org/abs/1905.01067)      | [Ramanujan et al.](https://arxiv.org/abs/1911.13299) | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |    Sig. Supermask (us)   |  Zhou   |        Ram.        | Diff. |   Sig. Supermask    |
 |:------|:--------------------:|:--------------:|:----:|:-----:|:--------------------:|:-------:|:------------------:|:-----:|:-------------------:|
 | FCN   | 97.43  |      98.0      |  \-  |  \-   | 97.48  | 11 - 93 |         \-         |  \-   | 3.77  |
 | Conv2 | 68.79  |      66.0      |  65  |  70   | 68.37  | 11 - 93 |         10         |  10   | 0.60  |
