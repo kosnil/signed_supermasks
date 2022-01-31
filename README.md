@@ -21,13 +21,16 @@ The following table lists our results in terms of test accuracy and remaining we
 
 |       |                      |                |      |       |                      |         |                    |       |                     |
 |       |                      | Accuracy \[%\] |      |       |                      |         | Rem. Weights \[%\] |       |                     |
-|       |       Baseline       |      [Zhou et al.](https://arxiv.org/abs/1905.01067)      | [Ramanujan et al.](https://arxiv.org/abs/1911.13299) | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |    Sig. Supermask (us)   |  Zhou   |        Ram.        | Diff. |   Sig. Supermask    |
+|       |       Baseline       |      [Zhou et al.](https://arxiv.org/abs/1905.01067)      | [Ramanujan et al.](https://arxiv.org/abs/1911.13299) | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |    Sig. Supermask (Ours)   |  [Zhou et al.](https://arxiv.org/abs/1905.01067)   |        [Ramanujan et al.](https://arxiv.org/abs/1911.13299)        | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |   Sig. Supermask (Ours)   |
 |:------|:--------------------:|:--------------:|:----:|:-----:|:--------------------:|:-------:|:------------------:|:-----:|:-------------------:|
 | FCN   | 97.43  |      98.0      |  \-  |  \-   | 97.48  | 11 - 93 |         \-         |  \-   | 3.77  |
 | Conv2 | 68.79  |      66.0      |  65  |  70   | 68.37  | 11 - 93 |         10         |  10   | 0.60  |
 | Conv4 | 74.50  |      72.5      |  74  |  79   | 77.40  | 11 - 93 |         10         |  10   |  2.91 |
 | Conv6 | 75.91  |      76.5      |  77  |  82   | 79.17  | 11 - 93 |         10         |  10   |  2.36 |
 | Conv8 | 72.24  |       \-       |  70  |  85   | 80.91  |   \-    |         10         |  10   |  1.17 |
+| ResNet20 | 84.91  |      \-      |  \-  |  \-   | 81.68  | \- |         \-         |  \-   |  21.13 |
+| ResNet56 | 68.04  |      \-      |  \-  |  \-   | 60.01  | \- |         \-         |  \-   |  29.39 |
+| ResNet110 | 62.7  |      \-      |  \-  |  \-   | 46.42  | \- |         \-         |  \-   |  20.64 |
 
 For further and more detailed results, we refer to our paper. For instance, we vary weight and mask initialization, investigate the influence of batch normalization for the investigated ResNets and prune the networks to the extreme.
 
