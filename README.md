@@ -58,8 +58,8 @@ Kailkhura</a></th>
 <tbody>
 <tr class="odd">
   <td style="text-align: center;"></td>
-  <td colspan="5" style="text-align: center;">Accuracy \[%\]</td>       
-  <td colspan="4" style="text-align: center;">Rem. Weights \[%\]</td>
+  <td colspan="5" style="text-align: center;">Accuracy [%]</td>       
+  <td colspan="4" style="text-align: center;">Rem. Weights [%]</td>
 <\tr>
 <tr class="even">
 <td style="text-align: left;">FCN</td>
