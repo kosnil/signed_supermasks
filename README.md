@@ -20,18 +20,152 @@ Furthermore, we trained ResNet20s with variying width on CIFAR-10, as well as Re
 The following table lists our results in terms of test accuracy and remaining weights in comparison to the most related work:
 
 
-
-|       |       Baseline       |      [Zhou et al.](https://arxiv.org/abs/1905.01067)      | [Ramanujan et al.](https://arxiv.org/abs/1911.13299) | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |    Sig. Supermask (Ours)   |  [Zhou et al.](https://arxiv.org/abs/1905.01067)   |        [Ramanujan et al.](https://arxiv.org/abs/1911.13299)        | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |   Sig. Supermask (Ours)   |
-|:------|:--------------------:|:--------------:|:----:|:-----:|:--------------------:|:-------:|:------------------:|:-----:|:-------------------:|
-|  <td colspan="5" style="text-align: center;">Accuracy \[%\]</td>       <td colspan="4" style="text-align: center;">Rem. Weights \[%\]</td> 
-| FCN   | 97.43  |      98.0      |  \-  |  \-   | 97.48  | 11 - 93 |         \-         |  \-   | 3.77  |
-| Conv2 | 68.79  |      66.0      |  65  |  70   | 68.37  | 11 - 93 |         10         |  10   | 0.60  |
-| Conv4 | 74.50  |      72.5      |  74  |  79   | 77.40  | 11 - 93 |         10         |  10   |  2.91 |
-| Conv6 | 75.91  |      76.5      |  77  |  82   | 79.17  | 11 - 93 |         10         |  10   |  2.36 |
-| Conv8 | 72.24  |       \-       |  70  |  85   | 80.91  |   \-    |         10         |  10   |  1.17 |
-| ResNet20 | 84.91  |      \-      |  \-  |  \-   | 81.68  | \- |         \-         |  \-   |  21.13 |
-| ResNet56 | 68.04  |      \-      |  \-  |  \-   | 60.01  | \- |         \-         |  \-   |  29.39 |
-| ResNet110 | 62.7  |      \-      |  \-  |  \-   | 46.42  | \- |         \-         |  \-   |  20.64 |
+<table>
+<colgroup>
+<col style="width: 5%" />
+<col style="width: 16%" />
+<col style="width: 11%" />
+<col style="width: 4%" />
+<col style="width: 5%" />
+<col style="width: 16%" />
+<col style="width: 6%" />
+<col style="width: 14%" />
+<col style="width: 5%" />
+<col style="width: 15%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: center;">Baseline</th>
+<th style="text-align: center;"><a
+href="https://arxiv.org/abs/1905.01067">Zhou et al.</a></th>
+<th style="text-align: center;"><a
+href="https://arxiv.org/abs/1911.13299">Ramanujan et al.</a></th>
+<th style="text-align: center;"><a
+href="https://arxiv.org/abs/2103.09377">Diffenderfer &amp;
+Kailkhura</a></th>
+<th style="text-align: center;">Sig. Supermask (Ours)</th>
+<th style="text-align: center;"><a
+href="https://arxiv.org/abs/1905.01067">Zhou et al.</a></th>
+<th style="text-align: center;"><a
+href="https://arxiv.org/abs/1911.13299">Ramanujan et al.</a></th>
+<th style="text-align: center;"><a
+href="https://arxiv.org/abs/2103.09377">Diffenderfer &amp;
+Kailkhura</a></th>
+<th style="text-align: center;">Sig. Supermask (Ours)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FCN</td>
+<td style="text-align: center;">97.43</td>
+<td style="text-align: center;">98.0</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">97.48</td>
+<td style="text-align: center;">11 - 93</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">3.77</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Conv2</td>
+<td style="text-align: center;">68.79</td>
+<td style="text-align: center;">66.0</td>
+<td style="text-align: center;">65</td>
+<td style="text-align: center;">70</td>
+<td style="text-align: center;">68.37</td>
+<td style="text-align: center;">11 - 93</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">0.60</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Conv4</td>
+<td style="text-align: center;">74.50</td>
+<td style="text-align: center;">72.5</td>
+<td style="text-align: center;">74</td>
+<td style="text-align: center;">79</td>
+<td style="text-align: center;">77.40</td>
+<td style="text-align: center;">11 - 93</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">2.91</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Conv6</td>
+<td style="text-align: center;">75.91</td>
+<td style="text-align: center;">76.5</td>
+<td style="text-align: center;">77</td>
+<td style="text-align: center;">82</td>
+<td style="text-align: center;">79.17</td>
+<td style="text-align: center;">11 - 93</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">2.36</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Conv8</td>
+<td style="text-align: center;">72.24</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">70</td>
+<td style="text-align: center;">85</td>
+<td style="text-align: center;">80.91</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">1.17</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ResNet20</td>
+<td style="text-align: center;">84.91</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">81.68</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">21.13</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ResNet56</td>
+<td style="text-align: center;">68.04</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">60.01</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">29.39</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ResNet110</td>
+<td style="text-align: center;">62.7</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">46.42</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">20.64</td>
+</tr>
+</tbody>
+</table>
 
 For further and more detailed results, we refer to our paper. For instance, we vary weight and mask initialization, investigate the influence of batch normalization for the investigated ResNets and prune the networks to the extreme.
 
