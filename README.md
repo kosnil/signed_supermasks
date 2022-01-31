@@ -57,18 +57,6 @@ Kailkhura</a></th>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-</tr>
-<tr>
   <td style="text-align: center;"></td>
   <td colspan="5" style="text-align: center;">Accuracy \[%\]</td>       
   <td colspan="4" style="text-align: center;">Rem. Weights \[%\]</td>
