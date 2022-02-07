@@ -17,148 +17,21 @@ Experiments can be run on the five different neural network architectures invest
 While FCN was trained on MNIST only, the CNN architectures (Conv2 - Conv8) were trained on CIFAR-10.
 Furthermore, we trained ResNet20s with variying width on CIFAR-10, as well as ResNet56 and ResNet110 on CIFAR-100. 
 
-The following table lists our results in terms of test accuracy and remaining weights in comparison to the most related work:
+The following table lists our results in terms of mean test accuracy and mean remaining weights over all conducted experiments.
 
+| Model         | Dataset   | Params. | Rem. Weights [%]  | Accuracy [%]  | Baseline
+| :------------ | :-------: | :-----: | :---------------: | :-----------: |
+| FCN           | MNIST     | .27 M   | 3.77              | 97.48         |
+| Conv2         | CIFAR10   | 4.3 M   | .60               | 68.37         |
+| Conv4         | CIFAR10   | 2.4 M   | 2.91              | 77.40         |
+| Conv6         | CIFAR10   | 2.3 M   | 2.36              | 79.17         |
+| Conv8         | CIFAR10   | 5.3 M   | 1.17              | 80.91         |
+| ResNet20      | CIFAR10   | .25 M   | 21.13             | 81.68         |
+| ResNet20x2    | CIFAR10   | 1.0 M   | 7.69              | 84.42         |
+| ResNet20x3    | CIFAR10   | 2.2 M   | 4.06              | 84.89         |
+| ResNet56      | CIFAR100  | .84 M   | 29.39             | 60.01         |
+| ResNet110     | CIFAR100  | .84 M   | 20.64             | 46.42         |
 
-<table>
-<colgroup>
-<col style="width: 5%" />
-<col style="width: 16%" />
-<col style="width: 11%" />
-<col style="width: 4%" />
-<col style="width: 5%" />
-<col style="width: 16%" />
-<col style="width: 6%" />
-<col style="width: 14%" />
-<col style="width: 5%" />
-<col style="width: 15%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;"></th>
-<th style="text-align: center;">Baseline</th>
-<th style="text-align: center;"><a
-href="https://arxiv.org/abs/1905.01067">Zhou et al.</a></th>
-<th style="text-align: center;"><a
-href="https://arxiv.org/abs/1911.13299">Ramanujan et al.</a></th>
-<th style="text-align: center;"><a
-href="https://arxiv.org/abs/2103.09377">Diffenderfer &amp;
-Kailkhura</a></th>
-<th style="text-align: center;">Sig. Supermask (Ours)</th>
-<th style="text-align: center;"><a
-href="https://arxiv.org/abs/1905.01067">Zhou et al.</a></th>
-<th style="text-align: center;"><a
-href="https://arxiv.org/abs/1911.13299">Ramanujan et al.</a></th>
-<th style="text-align: center;"><a
-href="https://arxiv.org/abs/2103.09377">Diffenderfer &amp;
-Kailkhura</a></th>
-<th style="text-align: center;">Sig. Supermask (Ours)</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-  <td style="text-align: center;"></td>
-  <td colspan="5" style="text-align: center;">Accuracy [%]</td>       
-  <td colspan="4" style="text-align: center;">Rem. Weights [%]</td>
-<\tr>
-<tr class="even">
-<td style="text-align: left;">FCN</td>
-<td style="text-align: center;">97.43</td>
-<td style="text-align: center;">98.0</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">97.48</td>
-<td style="text-align: center;">11 - 93</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">3.77</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Conv2</td>
-<td style="text-align: center;">68.79</td>
-<td style="text-align: center;">66.0</td>
-<td style="text-align: center;">65</td>
-<td style="text-align: center;">70</td>
-<td style="text-align: center;">68.37</td>
-<td style="text-align: center;">11 - 93</td>
-<td style="text-align: center;">10</td>
-<td style="text-align: center;">10</td>
-<td style="text-align: center;">0.60</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Conv4</td>
-<td style="text-align: center;">74.50</td>
-<td style="text-align: center;">72.5</td>
-<td style="text-align: center;">74</td>
-<td style="text-align: center;">79</td>
-<td style="text-align: center;">77.40</td>
-<td style="text-align: center;">11 - 93</td>
-<td style="text-align: center;">10</td>
-<td style="text-align: center;">10</td>
-<td style="text-align: center;">2.91</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Conv6</td>
-<td style="text-align: center;">75.91</td>
-<td style="text-align: center;">76.5</td>
-<td style="text-align: center;">77</td>
-<td style="text-align: center;">82</td>
-<td style="text-align: center;">79.17</td>
-<td style="text-align: center;">11 - 93</td>
-<td style="text-align: center;">10</td>
-<td style="text-align: center;">10</td>
-<td style="text-align: center;">2.36</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Conv8</td>
-<td style="text-align: center;">72.24</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">70</td>
-<td style="text-align: center;">85</td>
-<td style="text-align: center;">80.91</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">10</td>
-<td style="text-align: center;">10</td>
-<td style="text-align: center;">1.17</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">ResNet20</td>
-<td style="text-align: center;">84.91</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">81.68</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">21.13</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">ResNet56</td>
-<td style="text-align: center;">68.04</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">60.01</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">29.39</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">ResNet110</td>
-<td style="text-align: center;">62.7</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">46.42</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">-</td>
-<td style="text-align: center;">20.64</td>
-</tr>
-</tbody>
-</table>
   
   |       |       Baseline       |      [Zhou et al.](https://arxiv.org/abs/1905.01067)      | [Ramanujan et al.](https://arxiv.org/abs/1911.13299) | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |    Sig. Supermask (Ours)   |  [Zhou et al.](https://arxiv.org/abs/1905.01067)   |        [Ramanujan et al.](https://arxiv.org/abs/1911.13299)        | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |   Sig. Supermask (Ours)   |
 |:------|:--------------------:|:--------------:|:----:|:-----:|:--------------------:|:-------:|:------------------:|:-----:|:-------------------:|
