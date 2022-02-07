@@ -20,14 +20,14 @@ Furthermore, we trained ResNet20s with variying width on CIFAR10, as well as Res
 The following table lists our results in terms of mean test accuracy and mean remaining weights over all conducted experiments. 
 Normally trained architectures act as baseline.
 
-| Model         | Dataset   | Baseline Acc. \[%\] | Signed Supermask Acc. \[%\]   | Params    | Rem. Weights [%]/Tot |
-| :------------ | :-------: | :-----------------: | :--------------------------:  | :-----:   | :------------------: |
-| FCN           | MNIST     | 97.42               | 97.48                         | 0.27 M    | 3.77 / 10.1 K        |
-| Conv2         | CIFAR10   | 68.79               | 68.37                         | 4.3 M     | 0.60 / 25.8 K        |
-| Conv4         | CIFAR10   | 74.50               | 77.40                         | 2.4 M     | 2.91 / 69.8 K        | 
-| Conv6         | CIFAR10   | 75.91               | 79.17                         | 2.3 M     | 2.36 / 54.3 K        | 
-| Conv8         | CIFAR10   | 72.24               | 80.91                         | 5.3 M     | 1.17 / 62.0 K        |
-| ResNet20      | CIFAR10   | 84.91               | 81.68                         | 0.25 M    | 21.13 / 52.8 K       | 
+| Model         | Dataset   | Baseline Acc. \[%\] | Signed Supermask Acc. \[%\]   | Params    | Rem. Weights     |
+| :------------ | :-------: | :-----------------: | :--------------------------:  | :-----:   | :--------------: |
+| FCN           | MNIST     | 97.42               | 97.48                         | 0.27 M    | 3.77 % / 10.1 K  |
+| Conv2         | CIFAR10   | 68.79               | 68.37                         | 4.3 M     | 0.60 % / 25.8 K  |
+| Conv4         | CIFAR10   | 74.50               | 77.40                         | 2.4 M     | 2.91 % / 69.8 K  | 
+| Conv6         | CIFAR10   | 75.91               | 79.17                         | 2.3 M     | 2.36 % / 54.3 K  | 
+| Conv8         | CIFAR10   | 72.24               | 80.91                         | 5.3 M     | 1.17 % / 62.0 K  |
+| ResNet20      | CIFAR10   | 84.91               | 81.68                         | 0.25 M    | 21.13 % / 52.8 K | 
 | ResNet20x2    | CIFAR10   | 86.80               | 84.42                         | 1.0 M     | 7.69 / 76.9 K        | 
 | ResNet20x3    | CIFAR10   | 87.32               | 84.89                         | 2.2 M     | 4.06 / 89.3 K        | 
 | ResNet56      | CIFAR100  | 68.04               | 60.01                         | .84 M     | 29.39 / 247 K        | 
