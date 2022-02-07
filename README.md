@@ -47,7 +47,16 @@ The code was written and tested on
 
 ## Structure
 
-The code is structured such that we only need to specify a few parameters such as the network architecture (among the available FCN, Conv2, Conv4, Conv6 and Conv8) and learning hyperparameters along with the path to the previously initialized weights. This way, the actual training process is speed up and we the different all base on the same initial weights/masks.
+We shortly explain the main structure of the repository and explain each file. Generally, the code is structured such that it is easy to reproduce the experiments. All parameters are defined in a .yaml-config
+
+- `custom_layers.py´ holds, as the name suggests, all customized layers. These not only include the Dense and Conv2D layers modified for signed Supermasks, but also some standard layers which are just slightly modified to fit the whole pipeline.
+- `dense_networks.py´ contains only the two FCN variants (that is the baseline and the signed Supermask version)
+- `conv_networks.py´ contains all CNN architectures
+- `resnet_networks.py´ contains all ResNet architectures as well as the ResNet blocks
+- `data_preprocessor.py´ holds all functionality regarding data handling and preprocessing
+- `weight_initializer.py´ includes all common initialization schemes (i.e. He, Xavier) as well as ELU/S. It is possible to initialize models directly with newly created weights and to save weights for later use as well as set weights from a specific file/array.
+- `model_trainer.py´ is used to train the models, both baselines and signed Supermasks.
+- `experiment_looper.py´ stitches all previously mentioned files together to a single pipeline, such that training becomes easy. A user merely passes the path to the config file and the model is then trained. Models are not being saved, due to the high number of experiments in the paper.
 
 ### Weights / Masks
 
