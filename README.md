@@ -19,7 +19,7 @@ Furthermore, we trained ResNet20s with variying width on CIFAR-10, as well as Re
 
 The following table lists our results in terms of mean test accuracy and mean remaining weights over all conducted experiments.
 
-| Model         | Dataset   | Params. | Rem. Weights [%]  | Accuracy [%]  | Baseline
+| Model         | Dataset   | Params. | Rem. Weights [%]  | Accuracy [%]  | 
 | :------------ | :-------: | :-----: | :---------------: | :-----------: |
 | FCN           | MNIST     | .27 M   | 3.77              | 97.48         |
 | Conv2         | CIFAR10   | 4.3 M   | .60               | 68.37         |
