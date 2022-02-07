@@ -19,18 +19,18 @@ Furthermore, we trained ResNet20s with variying width on CIFAR-10, as well as Re
 
 The following table lists our results in terms of mean test accuracy and mean remaining weights over all conducted experiments.
 
-| Model         | Dataset   | Params. | Rem. Weights [%]  | Accuracy [%]  | 
-| :------------ | :-------: | :-----: | :---------------: | :-----------: |
-| FCN           | MNIST     | .27 M   | 3.77              | 97.48         |
-| Conv2         | CIFAR10   | 4.3 M   | .60               | 68.37         |
-| Conv4         | CIFAR10   | 2.4 M   | 2.91              | 77.40         |
-| Conv6         | CIFAR10   | 2.3 M   | 2.36              | 79.17         |
-| Conv8         | CIFAR10   | 5.3 M   | 1.17              | 80.91         |
-| ResNet20      | CIFAR10   | .25 M   | 21.13             | 81.68         |
-| ResNet20x2    | CIFAR10   | 1.0 M   | 7.69              | 84.42         |
-| ResNet20x3    | CIFAR10   | 2.2 M   | 4.06              | 84.89         |
-| ResNet56      | CIFAR100  | .84 M   | 29.39             | 60.01         |
-| ResNet110     | CIFAR100  | .84 M   | 20.64             | 46.42         |
+| Model         | Dataset   | Baseline Acc. \[%\] | Signed Supermask Acc. \[%\]   | Params. | Rem. Weights [%]  |
+| :------------ | :-------: | :-----------------: | :--------------------------:  | :-----: | :---------------: |
+| FCN           | MNIST     | 97.42               | 97.48                         | .27 M   | 3.77              |
+| Conv2         | CIFAR10   | 68.79               | 68.37                         | 4.3 M   | .60               |
+| Conv4         | CIFAR10   | 74.50               | 77.40                         | 2.4 M   | 2.91              | 
+| Conv6         | CIFAR10   | 75.91               | 79.17                         | 2.3 M   | 2.36              | 
+| Conv8         | CIFAR10   | 72.24               | 80.91                         | 5.3 M   | 1.17              |
+| ResNet20      | CIFAR10   | 84.91               | 81.68                         | .25 M   | 21.13             | 
+| ResNet20x2    | CIFAR10   | 86.80               | 84.42                         | 1.0 M   | 7.69              | 
+| ResNet20x3    | CIFAR10   | 87.32               | 84.89                         | 2.2 M   | 4.06              | 
+| ResNet56      | CIFAR100  | 68.04               | 60.01                         | .84 M   | 29.39             | 
+| ResNet110     | CIFAR100  | 62.70               | 46.42                         | 1.7 M   | 20.64             | 
 
   
   |       |       Baseline       |      [Zhou et al.](https://arxiv.org/abs/1905.01067)      | [Ramanujan et al.](https://arxiv.org/abs/1911.13299) | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |    Sig. Supermask (Ours)   |  [Zhou et al.](https://arxiv.org/abs/1905.01067)   |        [Ramanujan et al.](https://arxiv.org/abs/1911.13299)        | [Diffenderfer & Kailkhura](https://arxiv.org/abs/2103.09377) |   Sig. Supermask (Ours)   |
