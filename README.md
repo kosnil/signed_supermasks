@@ -6,7 +6,7 @@ We present a novel approach that trains a given neural network by simply selecti
 This proposition extends the work of [Zhou et al.](https://arxiv.org/abs/1905.01067) ([Code](https://github.com/uber-research/deconstructing-lottery-tickets)) and [Ramanujan et al.](https://arxiv.org/abs/1911.13299) ([Code](https://github.com/allenai/hidden-networks)) who consider masking but not sign-inverting the initial weights and follow the findings of the Lottery Ticket Hypothesis [Frankle2018](https://arxiv.org/abs/1803.03635) ([Code](https://github.com/google-research/lottery-ticket-hypothesis)).
 Through this extension and adaptations of initialization methods, we concurrently gain a pruning rate of 96% to 99% while matching or exceeding the performance of various baseline models and the current literature. 
 
-Experiments can be run on the five different neural network architectures investigated in the paper. The table below shows the architecture of FCN, a simple feed-forward neural network as well as different VGG-like CNN architectures.
+Experiments can be run on all invetigated architectures in the paper, including a simple feed-forward neural network, four differently sized VGG-like CNNs as well as three ResNets. The table below shows the architecture of FCN, and the different VGG-like CNN architectures.
 
 |             | FCN | Conv2 | Conv4 | Conv6 | Conv8 |
 |------------ | :-: | :---: | :---: | :---: | :---: |
