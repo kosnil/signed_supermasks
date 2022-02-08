@@ -330,10 +330,10 @@ class Conv8(tf.keras.Model):
         x = self.flatten(x)
 
         x = self.linear_first(x)
-        x = tf.nn.relu(x)
+        x = self.activation(x)
 
         x = self.linear_second(x)
-        x = tf.nn.relu(x)
+        x = self.activation(x)
 
         x = self.linear_out(x)
 
