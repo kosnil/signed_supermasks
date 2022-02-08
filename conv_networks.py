@@ -1,8 +1,4 @@
 import tensorflow as tf
-import functools
-#import tensorflow_probability as tfp
-from tensorflow.keras import layers
-import numpy as np
 
 from custom_layers import Conv2DExt, DenseExt, MaxPool2DExt, FlattenExt
 from custom_layers import MaskedDense, MaskedConv2D
