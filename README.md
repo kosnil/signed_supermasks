@@ -58,6 +58,7 @@ We shortly explain the main structure of the repository and explain each file. G
 - `weight_initializer.py` includes all common initialization schemes (i.e. He, Xavier) as well as ELU/S for weights and masks. It is possible to initialize models directly with newly created weights and to save weights for later use as well as set weights from a specific file/array. `init_example.py` provides a code snippet, that lets you create and save a defined model's weights and masks. If you'd like to create weights on the fly, set the parameters accordingly - see e.g. `resnet20_elu_baseline.yaml`.
 - `model_trainer.py` is used to train the models, both baselines and signed Supermasks.
 - `experiment_looper.py` stitches all previously mentioned files together to a single pipeline, such that training becomes easy. A user merely passes the path to the config file and the model is then trained. Models are not being saved, due to the high number of experiments in the paper.
+- `minimal_working_example.py` is a very minimalistic working example. The config files should be self-explanatory after a brief examination.
 
 
 
