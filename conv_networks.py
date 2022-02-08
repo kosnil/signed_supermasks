@@ -348,7 +348,6 @@ class Conv2_Mask(tf.keras.Model):
                  input_shape,
                  dynamic_scaling_cnn=False,
                  dynamic_scaling_dense=False,
-                #  tanh_th=0.5,
                  k_cnn=0.4,
                  k_dense=0.3,
                  width_multiplier=1,
@@ -362,7 +361,6 @@ class Conv2_Mask(tf.keras.Model):
                                     input_shape=input_shape,
                                     dynamic_scaling=dynamic_scaling_cnn,
                                     masking_method=masking_method,
-                                    # tanh_th=tanh_th,
                                     k=k_cnn,
                                     name="conv_in")
 
@@ -374,7 +372,6 @@ class Conv2_Mask(tf.keras.Model):
                                         input_shape = conv_in_out_shape,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method,
-                                        # tanh_th=tanh_th,
                                         k=k_cnn,
                                         name="conv_second")
 
@@ -393,7 +390,6 @@ class Conv2_Mask(tf.keras.Model):
                                         dynamic_scaling=dynamic_scaling_dense,
                                         masking_method=masking_method,
                                         k=k_dense,
-                                        # tanh_th=tanh_th,
                                         name="linear_first")
 
         self.linear_second = MaskedDense(input_dim=int(256*width_multiplier),
@@ -401,7 +397,6 @@ class Conv2_Mask(tf.keras.Model):
                                          dynamic_scaling=dynamic_scaling_dense,
                                          masking_method=masking_method,
                                          k=k_dense,
-                                        #  tanh_th=tanh_th,
                                          name="linear_second")
 
         self.linear_out = MaskedDense(input_dim=int(256*width_multiplier),
@@ -409,7 +404,6 @@ class Conv2_Mask(tf.keras.Model):
                                       dynamic_scaling=dynamic_scaling_dense,
                                       masking_method=masking_method,
                                       k=k_dense,
-                                    #   tanh_th=tanh_th,
                                       name="linear_out")
 
         self.alpha = 1.0
@@ -486,7 +480,6 @@ class Conv4_Mask(tf.keras.Model):
     def __init__(self,
                  input_shape,
                  dynamic_scaling_cnn=False,
-                #  tanh_th=0.5,
                  k_cnn=0.4,
                  k_dense=0.3,
                  dynamic_scaling_dense=False,
@@ -499,7 +492,6 @@ class Conv4_Mask(tf.keras.Model):
                                     kernel_size=3,
                                     input_shape=input_shape,
                                     k=k_cnn,
-                                    # tanh_th=tanh_th,
                                     dynamic_scaling=dynamic_scaling_cnn,
                                     masking_method=masking_method,
                                     name="conv_in")
@@ -511,7 +503,6 @@ class Conv4_Mask(tf.keras.Model):
                                         kernel_size=3,
                                         input_shape = conv_in_out_shape,
                                         k=k_cnn,
-                                        # tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method,
                                         name="conv_second")
@@ -528,7 +519,6 @@ class Conv4_Mask(tf.keras.Model):
                                        kernel_size=3,
                                        input_shape = pooling_first_out_shape,
                                        k=k_cnn,
-                                    #    tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method,
                                        name="conv_third")
@@ -539,7 +529,6 @@ class Conv4_Mask(tf.keras.Model):
                                         kernel_size=3,
                                         input_shape = conv_third_out_shape,
                                         k=k_cnn,
-                                        # tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method,
                                         name="conv_fourth")
@@ -557,7 +546,6 @@ class Conv4_Mask(tf.keras.Model):
                                         units=int(256*width_multiplier),
                                         masking_method=masking_method,
                                         k=k_dense,
-                                        # tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_dense,
                                         name="linear_first")
 
@@ -565,7 +553,6 @@ class Conv4_Mask(tf.keras.Model):
                                          units=int(256*width_multiplier),
                                          masking_method=masking_method,
                                          k=k_dense,
-                                        #  tanh_th=tanh_th,
                                          dynamic_scaling=dynamic_scaling_dense,
                                          name="linear_second")
 
@@ -573,7 +560,6 @@ class Conv4_Mask(tf.keras.Model):
                                       units=10,
                                       masking_method=masking_method,
                                       k=k_dense,
-                                    #   tanh_th=tanh_th,
                                       dynamic_scaling=dynamic_scaling_dense,
                                       name="linear_out")
 
@@ -667,7 +653,6 @@ class Conv6_Mask(tf.keras.Model):
     def __init__(self,
                  input_shape,
                  dynamic_scaling_cnn=False,
-                 tanh_th=0.5,
                  k_cnn=0.4,
                  k_dense=0.3,
                  dynamic_scaling_dense=False,
@@ -680,7 +665,6 @@ class Conv6_Mask(tf.keras.Model):
                                     kernel_size=3,
                                     input_shape=input_shape,
                                     k=k_cnn,
-                                    # tanh_th=tanh_th,
                                     dynamic_scaling=dynamic_scaling_cnn,
                                     masking_method=masking_method,
                                     name="conv_in")
@@ -692,7 +676,6 @@ class Conv6_Mask(tf.keras.Model):
                                         kernel_size=3,
                                         input_shape = conv_in_out_shape,
                                         k=k_cnn,
-                                        # tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method,
                                         name="conv_second")
@@ -709,7 +692,6 @@ class Conv6_Mask(tf.keras.Model):
                                        kernel_size=3,
                                        input_shape = pooling_first_out_shape,
                                        k=k_cnn,
-                                    #    tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method,
                                        name="conv_third")
@@ -720,7 +702,6 @@ class Conv6_Mask(tf.keras.Model):
                                         kernel_size=3,
                                         input_shape = conv_third_out_shape,
                                         k=k_cnn,
-                                        # tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method,
                                         name="conv_fourth")
@@ -736,7 +717,6 @@ class Conv6_Mask(tf.keras.Model):
                                        kernel_size=3,
                                        input_shape=pooling_second_out_shape,
                                        k=k_cnn,
-                                    #    tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method,
                                        name="conv_fifth")
@@ -747,7 +727,6 @@ class Conv6_Mask(tf.keras.Model):
                                        kernel_size=3,
                                        input_shape=conv_fifth_out_shape,
                                        k=k_cnn,
-                                    #    tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method,
                                        name="conv_sixth")
@@ -766,7 +745,6 @@ class Conv6_Mask(tf.keras.Model):
                                         units=int(256*width_multiplier),
                                         masking_method=masking_method,
                                         k=k_dense,
-                                        # tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_dense,
                                         name="linear_first")
 
@@ -774,7 +752,6 @@ class Conv6_Mask(tf.keras.Model):
                                          units=int(256*width_multiplier),
                                          masking_method=masking_method,
                                          k=k_dense,
-                                        #  tanh_th=tanh_th,
                                          dynamic_scaling=dynamic_scaling_dense,
                                          name="linear_second")
 
@@ -782,7 +759,6 @@ class Conv6_Mask(tf.keras.Model):
                                       units=10,
                                       masking_method=masking_method,
                                       k=k_dense,
-                                    #   tanh_th=tanh_th,
                                       dynamic_scaling=dynamic_scaling_dense,
                                       name="linear_out")
 
@@ -899,7 +875,6 @@ class Conv8_Mask(tf.keras.Model):
                                     kernel_size=3,
                                     input_shape=input_shape,
                                     k=k_cnn,
-                                    # tanh_th=tanh_th,
                                     dynamic_scaling=dynamic_scaling_cnn,
                                     masking_method=masking_method,
                                     name="conv_in")
@@ -909,7 +884,6 @@ class Conv8_Mask(tf.keras.Model):
                                         kernel_size=3,
                                         input_shape = conv_in_out_shape,
                                         k=k_cnn,
-                                        # tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method,
                                         name="conv_second")
@@ -924,7 +898,6 @@ class Conv8_Mask(tf.keras.Model):
                                        kernel_size=3,
                                        input_shape = pooling_first_out_shape,
                                        k=k_cnn,
-                                    #    tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method,
                                        name="conv_third")
@@ -934,7 +907,6 @@ class Conv8_Mask(tf.keras.Model):
                                         kernel_size=3,
                                         input_shape = conv_third_out_shape,
                                         k=k_cnn,
-                                        # tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method,
                                         name="conv_fourth")
@@ -951,7 +923,6 @@ class Conv8_Mask(tf.keras.Model):
                                        kernel_size=3,
                                        input_shape=pooling_second_out_shape,
                                        k=k_cnn,
-                                    #    tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method,
                                        name="conv_fifth")
@@ -962,7 +933,6 @@ class Conv8_Mask(tf.keras.Model):
                                        kernel_size=3,
                                        input_shape=conv_fifth_out_shape,
                                        k=k_cnn,
-                                    #    tanh_th=tanh_th,
                                        dynamic_scaling=dynamic_scaling_cnn,
                                        masking_method=masking_method,
                                        name="conv_sixth")
@@ -979,7 +949,6 @@ class Conv8_Mask(tf.keras.Model):
                                          kernel_size=3,
                                          input_shape=pooling_third_out_shape,
                                          k=k_cnn,
-                                        #  tanh_th=tanh_th,
                                          dynamic_scaling=dynamic_scaling_cnn,
                                          masking_method=masking_method,
                                          name="conv_seventh")
@@ -990,7 +959,6 @@ class Conv8_Mask(tf.keras.Model):
                                         kernel_size=3,
                                         input_shape=conv_seventh_out_shape,
                                         k=k_cnn,
-                                        # tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_cnn,
                                         masking_method=masking_method,
                                         name="conv_eighth")
@@ -1009,7 +977,6 @@ class Conv8_Mask(tf.keras.Model):
                                         units=256,
                                         masking_method=masking_method,
                                         k=k_dense,
-                                        # tanh_th=tanh_th,
                                         dynamic_scaling=dynamic_scaling_dense,
                                         name="linear_first")
 
@@ -1017,7 +984,6 @@ class Conv8_Mask(tf.keras.Model):
                                          units=256,
                                          masking_method=masking_method,
                                          k=k_dense,
-                                        #  tanh_th=tanh_th,
                                          dynamic_scaling=dynamic_scaling_dense,
                                          name="linear_second")
 
@@ -1025,7 +991,6 @@ class Conv8_Mask(tf.keras.Model):
                                       units=10,
                                       masking_method=masking_method,
                                       k=k_dense,
-                                    #   tanh_th=tanh_th,
                                       dynamic_scaling=dynamic_scaling_dense,
                                       name="linear_out")
 
@@ -1136,102 +1101,3 @@ class Conv8_Mask(tf.keras.Model):
         x = tf.nn.softmax(x)
 
         return x
-
-class VGGS(tf.keras.Model):
-
-    def __init__(self,
-                 input_shape: tuple,
-                 num_classes: int):
-        super(VGGS).__init__()
-
-        self.c1= MaskedConv2D(filters=128,
-                            kernel_size=3,
-                            input_shape=input_shape,
-                            # tanh_th=tanh_th,
-                            name="conv_in")
-        c1_os = self.c1.out_shape
-
-        self.c2 = MaskedConv2D(filters=128,
-                                kernel_size=3,
-                                input_shape = c1_os,
-                                name="conv_second")
-        c2_os = self.c2.out_shape
-
-        self.p1 = MaxPool2DExt(input_shape = c2_os,
-                                pool_size=(2,2),
-                                strides=(2,2))
-
-        p1_os = self.p1.out_shape
-
-        self.c3= MaskedConv2D(filters=256,
-                            kernel_size=3,
-                            input_shape=p1_os,
-                            # tanh_th=tanh_th,
-                            name="conv_in")
-        c3_os = self.c3.out_shape
-
-        self.c4 = MaskedConv2D(filters=256,
-                                kernel_size=3,
-                                input_shape = c3_os,
-                                name="conv_second")
-        c4_os = self.c4.out_shape
-
-        self.p2 = MaxPool2DExt(input_shape = c4_os,
-                                pool_size=(2,2),
-                                strides=(2,2))
-
-        p2_os = self.p2.out_shape
-
-        self.c5= MaskedConv2D(filters=512,
-                            kernel_size=3,
-                            input_shape=p2_os,
-                            # tanh_th=tanh_th,
-                            name="conv_in")
-        c5_os = self.c5.out_shape
-
-        self.c6 = MaskedConv2D(filters=512,
-                                kernel_size=3,
-                                input_shape = c5_os,
-                                name="conv_second")
-        c6_os = self.c6.out_shape
-
-        self.p3 = MaxPool2DExt(input_shape = c6_os,
-                                pool_size=(2,2),
-                                strides=(2,2))
-
-        p3_os = self.p3.out_shape
-
-        self.flatten = FlattenExt()
-
-        self.fc = MaskedDense(input_dim=int(tf.math.reduce_prod(p3_os[1:]).numpy()),
-                              units=num_classes)
-
-    def activation(self, x):
-        return tf.nn.elu(x)
-
-    @tf.function
-    def call(self, inputs):
-
-        x = self.c1(inputs)
-        x = self.activation(x)
-        x = self.c2(x)
-        x = self.activation(x)
-        x = self.p1(x)
-
-        x = self.c3(x)
-        x = self.activation(x)
-        x = self.c4(x)
-        x = self.activation(x)
-        x = self.p2(x)
-
-        x = self.c5(x)
-        x = self.activation(x)
-        x = self.c6(x)
-        x = self.activation(x)
-        x = self.p3(x)
-
-        x = self.flatten(x)
-
-        x = self.fc(x)
-
-        return tf.nn.softmax(x)
