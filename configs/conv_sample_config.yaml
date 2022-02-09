@@ -1,0 +1,46 @@
+#model parameters
+baseline: False #set to True if training baseline
+data: "cifar" #mnist/cifar/cifar100
+
+model: 
+ type: "Conv8" # Conv2/Conv4/Conv6/Conv8
+ masking_method: "fixed" 
+ tanh_th: .4
+ k_cnn: .25
+ k_dense: .25
+ dynamic_scaling_cnn: False # deprecated
+ dynamic_scaling_dense: False # deprecated
+ width_multiplier: 1.
+ use_dropout: False
+
+#weight init when weights are stored somewhere
+#path_weights: "./weights/Conv8/weight/signed_constant/elu_scaled/"
+#path_masks: "./weights/Conv8/mask/uniform/xavier/"
+
+#weight init "online"
+init:
+ on_the_fly: True
+ weight:
+  dist: "signed_constant"
+  method: "he"
+  factor: 1.5 # will be in np.sqrt()
+ mask:
+  dist: "uniform"
+  method: "xavier"
+  factor: 1.
+
+
+#optimizer parameters
+optimizer:
+ type: "sgdw" #sgdw/sgd/adam/adamw/rmsprop
+ lr_scheduler: "exponential_decay" #exponential_decay, None
+ lr: .05
+ weight_decay: 5e-4
+ momentum: .9
+ nesterov: True
+ #in case rms_prop is used
+ centered: True
+
+training:
+ epochs: 100
+ no_experiments: 50 #max: 50
