@@ -14,6 +14,20 @@
 **/.idea
 **/.vscode
 **/__pycache__
+
+
+**/configs/FCN
+**/configs/Conv2
+**/configs/Conv4
+**/configs/Conv6
+**/configs/Conv8
+**/configs/ResNet20
+**/configs/ResNet20_15
+**/configs/ResNet20_20
+**/configs/ResNet20_25
+**/configs/ResNet20_30
+**/configs/ResNet20_35
+**/configs/ResNet56
 **/configs/VGG16
 **/configs/VGG19
 
