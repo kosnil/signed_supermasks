@@ -669,6 +669,6 @@ class MaskedConv2D(tf.keras.layers.Conv2D):
             # weights_masked = tf.multiply(self.multiplier, weights_masked)
 
 
-        return self._convolution_op(inputs, weights_masked)
+        return self.convolution_op(inputs, weights_masked)
 
 
