@@ -34,8 +34,8 @@ init:
 optimizer:
  type: "sgdw" #sgdw/sgd/adam/adamw/rmsprop
  lr_scheduler: "exponential_decay" #exponential_decay, None
- lr: .05
- weight_decay: 5e-4
+ lr: .005
+ weight_decay: 3e-4
  momentum: .9
  nesterov: True
  #in case rms_prop is used
