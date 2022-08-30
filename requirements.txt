@@ -1,8 +1,8 @@
 tensorflow_datasets==4.4.0
-tensorflow==2.7.0
+tensorflow==2.7.1
 tensorflow_addons==0.15.0
 pandas==1.2.5
-numpy==1.21.2
+numpy==1.22
 requests==2.26.0
 beautifulsoup4==4.10.0
 PyYAML==6.0
